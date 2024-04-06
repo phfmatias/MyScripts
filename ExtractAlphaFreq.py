@@ -29,6 +29,7 @@ for file in files:
     freqs = x.getFrequency()
 
     results_freq = []
+    
 
     for i in freqs:
         results_freq.append(x.getAlpha(unit=unit, frequency=i)['iso'])

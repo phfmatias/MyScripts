@@ -93,6 +93,7 @@ class Plotter ():
         ax2.hlines(0, -1, 6.5, colors='k', linestyles='solid')
         ax2.set_xlim(-0.5, 6.5)
         ax2.set_xticks([0,1,2,3,4,5,6])
+        ax2.set_ylabel(r'Energy (kcal $\mathbf{mol^{-1}}$)', fontweight='bold', fontsize=10)
         ax2.set_xticklabels(['Electrostatic', 'Exchange', 'Pauli Repulsion', 'Orbital', 'DFTc', 'Dispersion', 'Total Energy'], fontweight='bold', fontsize=6)
         plt.savefig('SOBEDA_Plot_{}.png'.format(self.name), dpi=300, bbox_inches='tight')
        
