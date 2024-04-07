@@ -146,14 +146,18 @@ class Render():
         arq.write('color Display Background white\n')
         arq.write('axes location off\n')
         arq.write('display update\n')
-        arq.write('render Tachyon vmdscene.dat\n')
-        if self.wait:
-            pass
-        else:
+        if not self.wait:
+            arq.write('render Tachyon vmdscene.dat\n')
             arq.write('exit')
     
     def doRender(self):
         self.doTCL()
+        
+        if self.wait:
+            print('Please, when you are done type this in the vmd terminal:')
+            print('render Tachyon vmdscene.dat')
+            print('exit')
+            input('Press Enter to continue to open VMD')
 
         os.system('vmd {} -e render.tcl'.format(self.input_file))
         os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
