@@ -27,7 +27,6 @@ if len(argv) < 2:
     print('An example of the .inp file was created in the current directory.')
     exit(1)
 
-
 class pacKing:
     def __init__(self):
         self.charges = []
@@ -40,7 +39,6 @@ class pacKing:
         self.calculateDensity()
         self.print_file()
         
-    
     def control(self):
         arq = open(argv[1], 'r').readlines()
         self.solves = []
@@ -60,6 +58,26 @@ class pacKing:
                 self.data = arq[i].split()[2]
             if 'box_size' in arq[i]:
                 self.box_size = arq[i].split()[2]
+
+        if len(self.solves) == 0:
+            print('No solvent was found in the input file.')
+            exit(1) 
+        
+        if len(self.solutes) == 0:
+            print('No solute was found in the input file.')
+            exit(1)
+
+        try:
+            self.data
+        except:
+            print('No data file was found in the input file.')
+            exit(1)
+
+        try:
+            self.box_size
+        except:
+            print('No box_size was found in the input file.')
+            exit(1)            
         
         for i in range(len(self.solves)):
             print('Solvent {}: Number of Molecules {}'.format(self.solves[i].split('.')[0], self.numbers[i]))
