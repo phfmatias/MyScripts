@@ -37,6 +37,7 @@ class pacKing:
         self.preparing_data()
         self.read_box()
         self.modify=self.change_charges()
+        self.calculateDensity()
         self.print_file()
         
     
@@ -45,6 +46,7 @@ class pacKing:
         self.solves = []
         self.solutes = []
         self.numbers = []
+        self.molarMass = []
         self.atomnumbers = []
 
         for i in range(len(arq)):
@@ -56,23 +58,38 @@ class pacKing:
                 self.numbers.append(int(arq[i].split()[3]))
             if 'data' in arq[i]:
                 self.data = arq[i].split()[2]
+            if 'box_size' in arq[i]:
+                self.box_size = arq[i].split()[2]
         
         for i in range(len(self.solves)):
             print('Solvent {}: Number of Molecules {}'.format(self.solves[i].split('.')[0], self.numbers[i]))
         for i in range(len(self.solutes)):
             print('Solute {}: Number of Molecules {}'.format(self.solutes[i].split('.')[0], self.numbers[i+len(self.solves)]))
 
+    def calculateDensity(self):
+        mol_voly = 0
 
+        for i in range(len(self.solves)):
+            mol_voly += 1.6605577881 * sum(self.molarMass[i] * self.numbers[i] for i in range(len(self.solves)))
+        for i in range(len(self.solutes)):
+            mol_voly += 1.6605577881 * sum(self.molarMass[i] * self.numbers[i] for i in range(len(self.solutes)))
+
+        print('Density: {} g/cm³'.format(mol_voly/(float(self.box_size)**3)))
+
+        
+                
     def preparing_data(self):
         for i in range(len(self.solves)):
             self.gaussian_log = open(self.solves[i], 'r').readlines()
             self.atomnumbers.append(len(G16LOGfile(self.solves[i]).getMolecule()))
+            self.molarMass.append(G16LOGfile(self.solves[i]).getMolecule().getMM())
             self.charges.append(self.get_charges())
             self.charges_dict = {}
 
         for i in range(len(self.solutes)):
             self.gaussian_log = open(self.solutes[i], 'r').readlines()
             self.atomnumbers.append(len(G16LOGfile(self.solutes[i]).getMolecule()))
+            self.molarMass.append(G16LOGfile(self.solutes[i]).getMolecule().getMM())
             self.charges.append(self.get_charges())
             self.charges_dict = {}
 
