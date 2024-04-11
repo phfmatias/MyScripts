@@ -65,7 +65,7 @@ class pacKing:
         
         if len(self.solutes) == 0:
             print('No solute was found in the input file.')
-            exit(1)
+            
 
         try:
             self.data
@@ -91,9 +91,11 @@ class pacKing:
             mol_voly += 1.6605577881 * sum(self.molarMass[i] * self.numbers[i] for i in range(len(self.solves)))
         for i in range(len(self.solutes)):
             mol_voly += 1.6605577881 * sum(self.molarMass[i] * self.numbers[i] for i in range(len(self.solutes)))
-
+        
+        print('Box Size: {} Angstrom'.format(self.box_size))
+        print('Molecular Volume: {} cm³'.format(mol_voly))
         print('Density: {} g/cm³'.format(mol_voly/(float(self.box_size)**3)))
-
+        
         
                 
     def preparing_data(self):
@@ -162,9 +164,14 @@ class pacKing:
         arq = open('new_'+self.data, 'w')
         arqv = open(self.data, 'r').readlines()
         for i in arqv[0:self.start]:
-            arq.write(i)
-
-        
+            if 'xlo' in i.split():
+                arq.write('{} {} xlo xhi\n'.format(-float(self.box_size)/2, float(self.box_size)/2))
+            elif 'ylo' in i.split():
+                arq.write('{} {} ylo yhi\n'.format(-float(self.box_size)/2, float(self.box_size)/2))
+            elif 'zlo' in i.split():
+                arq.write('{} {} zlo zhi\n'.format(-float(self.box_size)/2, float(self.box_size)/2))
+            else:
+                arq.write(i)
         arq.write(self.modify)
         for i in arqv[self.end + 1:]:
             arq.write(i)
