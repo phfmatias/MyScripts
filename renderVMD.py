@@ -162,8 +162,8 @@ class Render():
         os.system('vmd {} -e render.tcl'.format(self.input_file))
         os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
 
-        self.toRemove = 'render.tcl vmdscene.dat'
-        os.system('rm {}'.format(self.toRemove))
+        #self.toRemove = 'render.tcl vmdscene.dat'
+        #os.system('rm {}'.format(self.toRemove))
     
         if 'temp.xyz' in os.listdir():
             os.system('rm temp.xyz')
