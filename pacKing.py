@@ -97,11 +97,12 @@ class pacKing:
         test = ''
         list_of_molecules = self.solves + self.solutes
         count = 1
-        for i in range(len(list_of_molecules)):
-            
+        for i in range(len(list_of_molecules)):            
             for j in range(start, start + self.numbers[i]*self.atomnumbers[i]):
                 c = self.box[j].split()[8] + '_' + str(count)
+                print(c, count)
                 test += ('{} {} {} {} {} {} {} {} {}\n'.format(self.box[j].split()[0], self.box[j].split()[1], self.box[j].split()[2], self.charges[i][c], self.box[j].split()[4], self.box[j].split()[5], self.box[j].split()[6], self.box[j].split()[7], self.box[j].split()[8]))
+                
                 count += 1
                 if count > self.atomnumbers[i]:
                     count = 1
