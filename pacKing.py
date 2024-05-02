@@ -118,7 +118,7 @@ class pacKing:
         s = ''
         rlines = open(self.data, 'r').readlines()
         for i in range(len(rlines)):
-            if ' Atoms # ' in rlines[i]:
+            if ' Atoms #' in rlines[i]:
                 start = i + 2
                 self.start = start
                 
