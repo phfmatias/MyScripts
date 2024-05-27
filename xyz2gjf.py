@@ -26,5 +26,6 @@ for i in xyz:
     out.write('0 1\n')
     for j in range(2, len(arq)):
         out.write(arq[j])
+    out.write('\n\n')    
     out.close()
     print('Conversion completed!')

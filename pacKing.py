@@ -135,11 +135,9 @@ class pacKing:
         list_of_molecules = self.solves + self.solutes
         count = 1
         for i in range(len(list_of_molecules)):            
-            for j in range(start, start + self.numbers[i]*self.atomnumbers[i]):
-                c = self.box[j].split()[8] + '_' + str(count)
-                print(c, count)
-                test += ('{} {} {} {} {} {} {} {} {}\n'.format(self.box[j].split()[0], self.box[j].split()[1], self.box[j].split()[2], self.charges[i][c], self.box[j].split()[4], self.box[j].split()[5], self.box[j].split()[6], self.box[j].split()[7], self.box[j].split()[8]))
-                
+            for j in range(start, start + self.numbers[i] * self.atomnumbers[i]):
+                c = list(self.charges[i].keys())[count-1]
+                test += self.box[j].replace(self.box[j].split()[3], self.charges[i][c])
                 count += 1
                 if count > self.atomnumbers[i]:
                     count = 1
@@ -147,7 +145,7 @@ class pacKing:
             start = j + 1
         return test
 
-                
+
     def get_charges(self):
         for i in range(len(self.gaussian_log)):
             if 'ESP charges:' in self.gaussian_log[i]:
