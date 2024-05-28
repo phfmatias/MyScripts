@@ -147,14 +147,17 @@ class pacKing:
 
 
     def get_charges(self):
+        start_list = []
+        end_list = []
         for i in range(len(self.gaussian_log)):
             if 'ESP charges:' in self.gaussian_log[i]:
-                start = i + 2
+                #take the last account of ESP charges
+                start_list.append(i + 2)
             if 'Sum of ESP charges' in self.gaussian_log[i]:
-                end = i 
-                break
-        for i in range(start, end):
+                end_list.append(i)
+        for i in range(start_list[-1], end_list[-1]):
             self.charges_dict[self.gaussian_log[i].split()[1]+'_'+self.gaussian_log[i].split()[0]] = self.gaussian_log[i].split()[2]
+        print(self.charges_dict)  
         return self.charges_dict
     
     
