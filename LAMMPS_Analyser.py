@@ -11,109 +11,162 @@
 ##   Description:  ['This script reads a LAMMPS log file and plots the percentage variation of each species over time.']
 ##   Usage:        ['python LAMMPS_Analyser.py <file_to_analyze>']
 
-
-
 import matplotlib.pyplot as plt
 from sys import argv
 
-file = argv[-1]
+if len(argv) < 2:
+    print("Usage: python LAMMPS_Analyser.py <file_to_analyze>")
+    exit()
 
-arq = open(file, 'r').readlines()
+class LammpsAnalyser:
+    def __init__(self):
+        self.file = argv[1]
+        self.species_set = set() 
+        self.species_dict = {}
+        self.quant_dict = {}
+        self.mole_dict = {}
+        self.nspecies_dict = {}
+        self.option_menu = None
 
-species_set = set() 
-species_dict = {}
-quant_dict = {}
-mole_dict = {}
-nspecies_dict = {}
+        if argv[-1] == 'DEBUG':
+            self.option_menu = 1
+            self.extract_infos()
+            self.runner()
 
-for i in range(len(arq)):
-    if '# Timestep' in arq[i]:
-        step = int(arq[i+1].split()[0])
-        species = arq[i].split()[4:]
-        quantities = arq[i+1].split()[3:]
-        nmoles = int(arq[i+1].split()[1])
-        nspecies = int(arq[i+1].split()[2])
-
-        species_dict[step] = species
-        quant_dict[step] = [int(q) for q in quantities]
-        mole_dict[step] = nmoles
-        nspecies_dict[step] = nspecies
-        
-        species_set.update(species)
-
-
-percentage_dict = {species: [] for species in species_set}
-
-
-steps_to_analyze = range(157, 8152, 5)
-
-# Calcular as porcentagens
-for step in steps_to_analyze:
-    if step in quant_dict:
-        total_moles = mole_dict[step]
-        quantities = quant_dict[step]
-        species = species_dict[step]
-        
-        # Inicializar porcentagens para todas as espécies como 0
-        step_percentages = {species: 0 for species in species_set}
-        
-        # Calcular as porcentagens para as espécies presentes
-        for i, specie in enumerate(species):
-            percentage = (quantities[i] / total_moles) * 100
-            step_percentages[specie] = percentage
-        
-        # Adicionar os valores calculados ao dicionário de porcentagens
-        for specie in species_set:
-            percentage_dict[specie].append(step_percentages[specie])
-    else:
-        # Se não houver dados para um step, adiciona zero às porcentagens
-        for specie in percentage_dict:
-            percentage_dict[specie].append(0)
-
-def plot_species(selected_species):
-    plt.figure(figsize=(12, 8))
-    for specie in selected_species:
-        if specie in percentage_dict:
-            plt.plot(steps_to_analyze, percentage_dict[specie], label=specie)
         else:
-            print(f"Espécie '{specie}' não encontrada nos dados.")
-    
-    plt.xlabel('Timestep')
-    plt.ylabel('Percentage of each species (%)')
-    plt.title('Percentage variation of each species over time')
-    plt.legend(loc='best', frameon=False)
-    plt.show()
+            self.extract_infos()
+            self.Menu()
+            self.runner()
 
+    def extract_infos(self):
+        with open(self.file, 'r') as f:
+            arq = f.readlines()
 
-def select_species(option, specific_species=None):
-    if option == 'all':
-        selected_species = species_set
-    elif option == 'specific':
-        if specific_species:
-            selected_species = specific_species
+        for i in range(len(arq)):
+            if '# Timestep' in arq[i]:
+                step = int(arq[i+1].split()[0])
+                species = arq[i].split()[4:]
+                quantities = arq[i+1].split()[3:]
+                nmoles = int(arq[i+1].split()[1])
+                nspecies = int(arq[i+1].split()[2])
+
+                self.species_dict[step] = species
+                self.quant_dict[step] = [int(q) for q in quantities]
+                self.mole_dict[step] = nmoles
+                self.nspecies_dict[step] = nspecies
+
+                self.species_set.update(species)
+
+        self.percentage_dict = {species: [] for species in self.species_set}
+
+        steps = sorted(self.nspecies_dict.keys())
+        self.steps_to_analyze = steps
+
+        # Calcular as porcentagens
+        for step in self.steps_to_analyze:
+            if step in self.quant_dict:
+                total_moles = self.mole_dict[step]
+                quantities = self.quant_dict[step]
+                species = self.species_dict[step]
+
+                # Inicializar porcentagens para todas as espécies como 0
+                step_percentages = {species: 0 for species in self.species_set}
+
+                # Calcular as porcentagens para as espécies presentes
+                for i, specie in enumerate(species):
+                    percentage = (quantities[i] / total_moles) * 100
+                    step_percentages[specie] = percentage
+
+                # Adicionar os valores calculados ao dicionário de porcentagens
+                for specie in self.species_set:
+                    self.percentage_dict[specie].append(step_percentages[specie])
+            else:
+                # Se não houver dados para um step, adiciona zero às porcentagens
+                for specie in self.percentage_dict:
+                    self.percentage_dict[specie].append(0)
+
+    def plot_species(self, selected_species, name, menu_option):
+        plt.figure(figsize=(12, 8))
+        for specie in selected_species:
+            if specie in self.percentage_dict:
+                plt.plot(self.steps_to_analyze, self.percentage_dict[specie], label=specie)
+            else:
+                print(f"Espécie '{specie}' não encontrada nos dados.")
+
+        plt.xlabel('Timestep')
+        plt.ylabel('Percentage of each species (%)')
+        plt.title('Percentage variation of each species over time')
+        if menu_option == 1:
+            sorted_species = sorted(self.species_set, key=lambda x: max(self.percentage_dict[x]), reverse=True)
+            selected_species = sorted_species[:10]
+            plt.legend(selected_species, loc='best', ncol=2)
+            plt.subplots_adjust(right=0.8)
+        else:
+            plt.legend(loc='best', frameon=False)
+        plt.savefig(f'{name}.png')
+
+    def select_species(self, option, specific_species=None):
+
+        if option == 'all':
+            selected_species = list(self.species_set)
+        elif option == 'specific':
+            if specific_species:
+                selected_species = specific_species
+            else:
+                selected_species = []
+        elif option == 'single':
+            if specific_species and len(specific_species) == 1:
+                selected_species = specific_species
+            else:
+                selected_species = []
         else:
             selected_species = []
-    elif option == 'single':
-        if specific_species and len(specific_species) == 1:
-            selected_species = specific_species
+
+        return selected_species
+
+    def Menu(self):
+        print("Select an option:")
+        print("1 - Plot all species")
+        print("2 - Plot specific species")
+        print("3 - Plot a single species")
+        print("4 - Exit")
+        self.option_menu = int(input("Option: "))
+        print('\n')
+
+    def runner(self):
+        if self.option_menu == 1:
+            selected_species = self.select_species('all')
+            name_saver = 'all_species_{}'.format(self.file.split('.')[0])
+            self.plot_species(selected_species, name_saver, self.option_menu)
+            print("Plot saved as {}.png".format(name_saver))
+
+        elif self.option_menu == 2:
+            print("Available species:")
+            print(", ".join(self.species_set))
+            print('\n')
+            species = input("Enter the species separated by commas: ")
+            selected_species = self.select_species('specific', [s.strip() for s in species.split(',')])
+            name_saver = 'specific_species_{}'.format(self.file.split('.')[0])
+            self.plot_species(selected_species, name_saver, self.option_menu)
+            print("Plot saved as {}.png".format(name_saver))
+
+        elif self.option_menu == 3:
+            print("Available species:")
+            print(", ".join(self.species_set))
+            print('\n')
+            species = input("Enter the species: ")
+            selected_species = self.select_species('single', [species.strip()])
+            name_saver = 'single_species_{}'.format(self.file.split('.')[0])
+            self.plot_species(selected_species, name_saver, self.option_menu)
+            print("Plot saved as {}.png".format(name_saver))
+
+        elif self.option_menu == 4:
+            exit()
+
         else:
-            selected_species = []
-    else:
-        selected_species = []
+            print("Invalid option. Try again.")
+            self.Menu()
+            self.runner()
 
-    return selected_species
-
-
-
-
-# # Plotar todas as espécies
-# selected_species = select_species('all')
-# plot_species(selected_species)
-
-# # Plotar algumas espécies específicas
-# selected_species = select_species('specific', ['NO', 'H2O', 'O3Na6'])
-# plot_species(selected_species)
-
-# # Plotar uma única espécie
-# selected_species = select_species('single', ['H2O'])
-# plot_species(selected_species)
+if __name__ == "__main__":
+    LammpsAnalyser()
