@@ -87,9 +87,20 @@ class LammpsAnalyser:
 
     def plot_species(self, selected_species, name, menu_option):
         plt.figure(figsize=(12, 8))
+
+
+        first_10_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+        
+        c = 0
+
+        #sorte species by max percentage
+
+        selected_species = sorted(selected_species, key=lambda x: max(self.percentage_dict[x]), reverse=True)
+
         for specie in selected_species:
             if specie in self.percentage_dict:
-                plt.plot(self.steps_to_analyze, self.percentage_dict[specie], label=specie)
+                plt.plot(self.steps_to_analyze, self.percentage_dict[specie], label=specie, color=first_10_colors[c])
+                c+=1
             else:
                 print(f"Espécie '{specie}' não encontrada nos dados.")
 
@@ -129,11 +140,15 @@ class LammpsAnalyser:
         print("1 - Plot all species")
         print("2 - Plot specific species")
         print("3 - Plot a single species")
-        print("4 - Exit")
+        print("4 - PLot specific species without Hydrogen")
+        print("5 - Exit")
         self.option_menu = int(input("Option: "))
         print('\n')
 
     def runner(self):
+
+        self.species_set = sorted(self.species_set)
+
         if self.option_menu == 1:
             selected_species = self.select_species('all')
             name_saver = 'all_species_{}'.format(self.file.split('.')[0])
@@ -161,6 +176,18 @@ class LammpsAnalyser:
             print("Plot saved as {}.png".format(name_saver))
 
         elif self.option_menu == 4:
+            print("Available species:")
+            wit_hyd = [specie for specie in self.species_set if 'H' not in specie]
+            print(", ".join(wit_hyd))
+            print('\n')
+            species = input("Enter the species separated by commas: ")
+            selected_species = self.select_species('specific', [s.strip() for s in species.split(',')])
+            name_saver = 'specific_species_without_Hydrogen_{}'.format(self.file.split('.')[0])
+            self.plot_species(selected_species, name_saver, self.option_menu)
+            print("Plot saved as {}.png".format(name_saver))
+
+
+        elif self.option_menu == 5:
             exit()
 
         else:
