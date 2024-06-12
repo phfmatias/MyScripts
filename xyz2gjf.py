@@ -18,6 +18,7 @@ xyz =  [i for i in listdir() if i.endswith('.xyz')]
 
 for i in xyz:
     arq = open(i, 'r').readlines()
+    arq = [i.replace(',', ' ') for i in arq]
     out = open(i.split('.')[0]+'.gjf', 'w')
     out.write('%nprocshared=4\n')
     out.write('%mem=4GB\n')
