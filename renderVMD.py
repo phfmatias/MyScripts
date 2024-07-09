@@ -21,15 +21,11 @@ except ImportError:
 
 import os
 
-if len(argv) != 3 and argv[2].split('.')[1] != 'cub':
+if len(argv) < 3:
     print("Usage: python3 renderVMD.py wait=False <input_file>")
+    print("                       OR                          ")
     print("wait=False: Do not wait for the VMD window to close")
-    print("wait=True: Wait for the VMD window to close, so you can rotate the molecule")
-    exit()
-
-if argv[2].split('.')[-1] == 'cub' and len(argv) != 4:
     print("Usage: python3 renderVMD.py wait=False <cube_file> <isovalue>")
-    print("wait=False: Do not wait for the VMD window to close")
     print("wait=True: Wait for the VMD window to close, so you can rotate the molecule")
     exit()
 
@@ -70,7 +66,6 @@ class Render():
 
     def check_file(self):
         if self.input_file.split('.')[-1] not in ['gjf', 'xyz', 'log', 'cub']:
-            print(self.input_file)
             print("Invalid file format. Please provide a valid file format: gjf, xyz or log")
             exit()
 
@@ -146,8 +141,6 @@ class Render():
                 el_list.append(element)
         
         for i in el_list:
-            if i == 'Cl':
-                print(i, PeriodicTable().getColor(i), self.HEX2RGB(PeriodicTable().getColor(i)))
             self.elements[i] = self.HEX2RGB(PeriodicTable().getColor(i))
 
     def doTCL(self, ipt):
@@ -192,7 +185,6 @@ class Render():
             arq.write('axes location Off\n')
             c = 0
             for key, value in self.elements.items():
-                print(key, value, self.colorsVMD[c])
                 arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
@@ -234,7 +226,6 @@ class Render():
             arq.write('axes location Off\n')
             c = 0
             for key, value in self.elements.items():
-                print(key, value, self.colorsVMD[c])
                 arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
@@ -305,7 +296,8 @@ class Render():
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e showcub.vmd'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-                os.system('rm render.tcl')
+                os.system('rm vmdscene.dat')
+                os.system('rm showcub.vmd')
             else:
                 print('Rendering...')
                 os.system('vmd {} -e showcub.vmd'.format(self.input_file.split('.')[0]))
