@@ -278,9 +278,6 @@ q
 if __name__ == '__main__':
     x = Fukui()
 
-
-
-
 '''
 INPUT EXAMPLE
 
@@ -292,6 +289,4 @@ MWFNPath = Multiwfn_3.8
 nproc = 1
 mem = 6000
 SystemName = Etano
-
-
 '''
