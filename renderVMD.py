@@ -21,11 +21,14 @@ except ImportError:
 
 import os
 
+
 if len(argv) < 3:
     print("Usage: python3 renderVMD.py wait=False <input_file>")
     print("                       OR                          ")
     print("wait=False: Do not wait for the VMD window to close")
-    print("Usage: python3 renderVMD.py wait=False <cube_file> <isovalue>")
+
+if '.cub' in argv[2] and len(argv) < 4:
+    print("Usage: python3 renderVMD.py wait=False <cube_file> <isovalue> fukui/orb")
     print("wait=True: Wait for the VMD window to close, so you can rotate the molecule")
     exit()
 
@@ -229,13 +232,17 @@ class Render():
             arq.write('mol modstyle 0 top CPK 0.800000 0.300000 600.000000 600.000000\n') #LIGAÇÃO
             arq.write('mol addrep top\n')
             arq.write('mol modstyle 1 top Isosurface $isoval 0 0 0 1 1\n')
-            arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD)))
-            arq.write('mol modcolor 1 top ColorID {}\n'.format(len(self.colorsVMD)))          #AZUL POSITIVO
+            if argv[-1].lower() == 'fukui':
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
+                arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO
+            if argv[-1].lower() == 'orb':
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
+                arq.write('color change rgb {} 1.000000 0.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO                
+            arq.write('mol modcolor 1 top ColorID {}\n'.format(len(self.colorsVMD)))         
             arq.write('mol modmaterial 1 top $mater\n')
             arq.write('mol addrep top\n')
             arq.write('mol modstyle 2 top Isosurface -$isoval 0 0 0 1 1\n')
-            arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))
-            arq.write('mol modcolor 2 top ColorID {}\n'.format(len(self.colorsVMD) -1))    #AMARELO NEGATIVO
+            arq.write('mol modcolor 2 top ColorID {}\n'.format(len(self.colorsVMD) -1))   
             arq.write('mol modmaterial 2 top $mater\n')
             arq.write('display distance -8.0\n')
             arq.write('display height 10\n')

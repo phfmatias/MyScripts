@@ -1,0 +1,1 @@
+This repository contains a lot of scripts that might be useful for computational chemists.
