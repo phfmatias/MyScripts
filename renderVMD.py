@@ -118,10 +118,18 @@ class Render():
         arq = open(self.input_file, 'r').readlines()
         for i in range(len(arq)):
             if len(arq[i].split()) == 5:
-                self.AtomsCub.append(arq[i].split()[0])
+                try:
+                    int(arq[i].split()[0])
+                    float(arq[i].split()[1])
+                    float(arq[i].split()[2])
+                    float(arq[i].split()[3])
+                    float(arq[i].split()[4])
+                    self.AtomsCub.append(arq[i].split()[0])
+                except:
+                    pass
 
         self.AtomsCub = list(set(self.AtomsCub))
-
+        
         for i in self.AtomsCub:
             atomCub = PeriodicTable().getSymbol(int(i))
             self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor(atomCub))
@@ -214,7 +222,10 @@ class Render():
             arq.write('axes location Off\n')
             c = 0
             for key, value in self.elements.items():
-                arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
+                if len(key) == 2:
+                    arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
+                else:
+                    arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
             arq.write('material change mirror Opaque 0.15\n')
