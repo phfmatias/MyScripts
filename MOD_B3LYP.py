@@ -15,7 +15,6 @@
 
 
 from sys import argv
-from MoleKing import Molecule
 
 if len(argv) != 2:
     print('################################################################')
