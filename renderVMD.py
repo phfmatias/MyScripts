@@ -119,12 +119,18 @@ class Render():
         for i in range(len(arq)):
             if len(arq[i].split()) == 5:
                 try:
-                    int(arq[i].split()[0])
-                    float(arq[i].split()[1])
-                    float(arq[i].split()[2])
-                    float(arq[i].split()[3])
-                    float(arq[i].split()[4])
-                    self.AtomsCub.append(arq[i].split()[0])
+
+                    if int(arq[i].split()[0]) < 0:
+                        pass
+
+                    else:
+                        print(arq[i])
+                        int(arq[i].split()[0])
+                        float(arq[i].split()[1])
+                        float(arq[i].split()[2])
+                        float(arq[i].split()[3])
+                        float(arq[i].split()[4])
+                        self.AtomsCub.append(arq[i].split()[0])
                 except:
                     pass
 
@@ -132,7 +138,14 @@ class Render():
         
         for i in self.AtomsCub:
             atomCub = PeriodicTable().getSymbol(int(i))
-            self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor(atomCub))
+            if atomCub == 'I':
+                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Pd'))
+            elif atomCub == 'Y':
+                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Cl'))
+            elif atomCub == 'F':
+                self.elements[atomCub] = [0.576, 1, 0.925]
+            else:
+                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor(atomCub))
 
     def doLOG(self):
         x = G16LOGfile(self.input_file).getMolecule().toXYZ(fileName='temp.xyz')
@@ -152,7 +165,14 @@ class Render():
                 el_list.append(element)
         
         for i in el_list:
-            self.elements[i] = self.HEX2RGB(PeriodicTable().getColor(i))
+            if i == 'I':
+                self.elements[i] = self.HEX2RGB(PeriodicTable().getColor('Pd'))
+            elif i == 'Y':
+                self.elements[i] = self.HEX2RGB(PeriodicTable().getColor('Cl'))
+            elif i == 'F':
+                self.elements[i] = [0.576, 1, 0.925]
+            else:
+                self.elements[i] = self.HEX2RGB(PeriodicTable().getColor(i))
 
     def doTCL(self, ipt):
 
@@ -163,6 +183,8 @@ class Render():
             arq.write('mol modcolor 1 0 Element\n')
             c = 0
             for key, value in self.elements.items():
+                if c == 8:
+                    c+=1
                 arq.write('color Element {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
@@ -178,10 +200,10 @@ class Render():
             arq.write('display distance -7.0\n')
             arq.write('display height 10\n')
             arq.write('light 3 on\n')
-            arq.write('display depthcue off\n')
-            arq.write('color Display Background white\n')
+            arq.write('display depthcue off\n')            
             arq.write('axes location off\n')
             arq.write('display update\n')
+            arq.write('color Display Background white\n')
             if argv[-1] == 'qtaim':
                 arq.write('color Display Background white\n')
                 arq.write('axes location Off\n')
@@ -208,6 +230,45 @@ class Render():
                 arq.write('mol new paths.pdb\n')
                 arq.write('mol modstyle 0 2 VDW $pathsize 22.0\n')
                 arq.write('mol modcolor 0 2 ColorID 32\n')
+                arq.write('color change rgb 17 1.000000 1.000000 0.000000\n')
+                arq.write('color Display Background white\n')
+                arq.write('proc labcp {cptype {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+                arq.write('label delete Atoms all\n')
+                arq.write('if {$cptype=="no"} {return}\n')
+                arq.write('color Labels Atoms blue\n')
+                arq.write('label textthickness 2.000000\n')
+                arq.write('label textsize $labsize\n')
+                arq.write('set atmsel all\n')
+                arq.write('if {$cptype=="3n3"} {set atmsel "name C"}\n')
+                arq.write('if {$cptype=="3n1"} {set atmsel "name N"}\n')
+                arq.write('if {$cptype=="3p1"} {set atmsel "name O"}\n')
+                arq.write('if {$cptype=="3p3"} {set atmsel "name F"}\n')
+                arq.write('set sel [atomselect 0 $atmsel]\n')
+                arq.write('set k 0\n')
+                arq.write('foreach i [$sel list] {\n')
+                arq.write('label add Atoms 0/$i\n')
+                arq.write('label textformat Atoms $k { %1i }\n')
+                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+                arq.write('incr k\n')
+                arq.write('}\n')
+                arq.write('$sel delete\n')
+                arq.write('}\n')
+                arq.write('\n')
+                arq.write('proc labcpidx {cpidx {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+                arq.write('label delete Atoms all\n')
+                arq.write('color Labels Atoms blue\n')
+                arq.write('label textthickness 2.000000\n')
+                arq.write('label textsize $labsize\n')
+                arq.write('set sel [atomselect 0 "serial $cpidx"]\n')
+                arq.write('set k 0\n')
+                arq.write('foreach i [$sel list] {\n')
+                arq.write('label add Atoms 0/$i\n')
+                arq.write('label textformat Atoms $k { %1i }\n')
+                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+                arq.write('incr k\n')
+                arq.write('}\n')
+                arq.write('$sel delete\n')
+                arq.write('}\n')
             if not self.wait:
                 arq.write('render Tachyon vmdscene.dat\n')
                 arq.write('exit')
@@ -216,14 +277,18 @@ class Render():
             arq = open('showcub.vmd','w')
             arq.write('proc cub {filename {isoval 0.05}} {\n')
             arq.write('set mater Glossy\n')
-            arq.write('color Display Background white\n')
+            arq.write('color Display Background {}\n'.format(self.colorsVMD[-2]))
+            arq.write('color change rgb {} 1.000000 1.000000 1.000000\n'.format(len(self.colorsVMD) -2))
             arq.write('display depthcue off\n')
             arq.write('display rendermode GLSL\n')
             arq.write('axes location Off\n')
             c = 0
             for key, value in self.elements.items():
                 if len(key) == 2:
-                    arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
+                    if key == 'Cl':
+                        pass
+                    else:
+                        arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
                 else:
                     arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
@@ -248,7 +313,10 @@ class Render():
                 arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO
             if argv[-1].lower() == 'orb':
                 arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
-                arq.write('color change rgb {} 1.000000 0.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO                
+                arq.write('color change rgb {} 1.000000 0.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO       
+            if argv[-1].lower() == 'spin':
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL
+                arq.write('color change rgb {} 0.000000 0.000000 1.000000 \n'.format(len(self.colorsVMD) -1)) #AZUL    
             arq.write('mol modcolor 1 top ColorID {}\n'.format(len(self.colorsVMD)))         
             arq.write('mol modmaterial 1 top $mater\n')
             arq.write('mol addrep top\n')
@@ -264,7 +332,6 @@ class Render():
             arq.write('}\n')
             arq.write('proc cub2 {filename1 filename2 {isoval 0.05}} {\n')
             arq.write('set mater Glossy\n')
-            arq.write('color Display Background white\n')
             arq.write('display depthcue off\n')
             arq.write('display rendermode GLSL\n')
             arq.write('axes location Off\n')
@@ -320,17 +387,18 @@ class Render():
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-                os.system('rm render.tcl')
+                #os.system('rm render.tcl')
 
             else:
                 print('Rendering...')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
                 self.toRemove = 'render.tcl vmdscene.dat'
-                os.system('rm {}'.format(self.toRemove))
+                #os.system('rm {}'.format(self.toRemove))
         
             if 'temp.xyz' in os.listdir():
-                os.system('rm temp.xyz')
+                pass
+                #os.system('rm temp.xyz')
 
         else:
             if self.wait:
@@ -340,17 +408,18 @@ class Render():
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e showcub.vmd'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-                os.system('rm vmdscene.dat')
-                os.system('rm showcub.vmd')
+                #os.system('rm vmdscene.dat')
+                #os.system('rm showcub.vmd')
             else:
                 print('Rendering...')
                 os.system('vmd {} -e showcub.vmd'.format(self.input_file.split('.')[0]))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-                self.toRemove = 'showcub.vmd vmdscene.dat'
-                os.system('rm {}'.format(self.toRemove))
+                #self.toRemove = 'showcub.vmd vmdscene.dat'
+                #os.system('rm {}'.format(self.toRemove))
             
             if 'temp.xyz' in os.listdir():
-                os.system('rm temp.xyz')
+                pass
+                #os.system('rm temp.xyz')
 
 
 if __name__ == '__main__':

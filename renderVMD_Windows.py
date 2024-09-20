@@ -105,7 +105,20 @@ class Render():
         arq = open(self.input_file, 'r').readlines()
         for i in range(len(arq)):
             if len(arq[i].split()) == 5:
-                self.AtomsCub.append(arq[i].split()[0])
+                try:
+
+                    if int(arq[i].split()[0]) < 0:
+                        pass
+
+                    else:
+                        int(arq[i].split()[0])
+                        float(arq[i].split()[1])
+                        float(arq[i].split()[2])
+                        float(arq[i].split()[3])
+                        float(arq[i].split()[4])
+                        self.AtomsCub.append(arq[i].split()[0])
+                except:
+                    pass
 
         self.AtomsCub = list(set(self.AtomsCub))
 
@@ -142,6 +155,8 @@ class Render():
             arq.write('mol modcolor 1 0 Element\n')
             c = 0
             for key, value in self.elements.items():
+                if c == 8:
+                    c+=1
                 arq.write('color Element {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
@@ -157,10 +172,10 @@ class Render():
             arq.write('display distance -7.0\n')
             arq.write('display height 10\n')
             arq.write('light 3 on\n')
-            arq.write('display depthcue off\n')
-            arq.write('color Display Background white\n')
+            arq.write('display depthcue off\n')            
             arq.write('axes location off\n')
             arq.write('display update\n')
+            arq.write('color Display Background white\n')
             if argv[-1] == 'qtaim':
                 arq.write('color Display Background white\n')
                 arq.write('axes location Off\n')
@@ -187,6 +202,45 @@ class Render():
                 arq.write('mol new paths.pdb\n')
                 arq.write('mol modstyle 0 2 VDW $pathsize 22.0\n')
                 arq.write('mol modcolor 0 2 ColorID 32\n')
+                arq.write('color change rgb 17 1.000000 1.000000 0.000000\n')
+                arq.write('color Display Background white\n')
+                arq.write('proc labcp {cptype {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+                arq.write('label delete Atoms all\n')
+                arq.write('if {$cptype=="no"} {return}\n')
+                arq.write('color Labels Atoms blue\n')
+                arq.write('label textthickness 2.000000\n')
+                arq.write('label textsize $labsize\n')
+                arq.write('set atmsel all\n')
+                arq.write('if {$cptype=="3n3"} {set atmsel "name C"}\n')
+                arq.write('if {$cptype=="3n1"} {set atmsel "name N"}\n')
+                arq.write('if {$cptype=="3p1"} {set atmsel "name O"}\n')
+                arq.write('if {$cptype=="3p3"} {set atmsel "name F"}\n')
+                arq.write('set sel [atomselect 0 $atmsel]\n')
+                arq.write('set k 0\n')
+                arq.write('foreach i [$sel list] {\n')
+                arq.write('label add Atoms 0/$i\n')
+                arq.write('label textformat Atoms $k { %1i }\n')
+                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+                arq.write('incr k\n')
+                arq.write('}\n')
+                arq.write('$sel delete\n')
+                arq.write('}\n')
+                arq.write('\n')
+                arq.write('proc labcpidx {cpidx {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+                arq.write('label delete Atoms all\n')
+                arq.write('color Labels Atoms blue\n')
+                arq.write('label textthickness 2.000000\n')
+                arq.write('label textsize $labsize\n')
+                arq.write('set sel [atomselect 0 "serial $cpidx"]\n')
+                arq.write('set k 0\n')
+                arq.write('foreach i [$sel list] {\n')
+                arq.write('label add Atoms 0/$i\n')
+                arq.write('label textformat Atoms $k { %1i }\n')
+                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+                arq.write('incr k\n')
+                arq.write('}\n')
+                arq.write('$sel delete\n')
+                arq.write('}\n')
             if not self.wait:
                 arq.write('render Tachyon vmdscene.dat\n')
                 arq.write('exit')
@@ -195,13 +249,20 @@ class Render():
             arq = open('showcub.vmd','w')
             arq.write('proc cub {filename {isoval 0.05}} {\n')
             arq.write('set mater Glossy\n')
-            arq.write('color Display Background white\n')
+            arq.write('color Display Background {}\n'.format(self.colorsVMD[-2]))
+            arq.write('color change rgb {} 1.000000 1.000000 1.000000\n'.format(len(self.colorsVMD) -2))
             arq.write('display depthcue off\n')
             arq.write('display rendermode GLSL\n')
             arq.write('axes location Off\n')
             c = 0
             for key, value in self.elements.items():
-                arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
+                if len(key) == 2:
+                    if key == 'Cl':
+                        pass
+                    else:
+                        arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
+                else:
+                    arq.write('color Name {} {}\n'.format(key, self.colorsVMD[c]))
                 arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
                 c+=1
             arq.write('material change mirror Opaque 0.15\n')
@@ -219,13 +280,17 @@ class Render():
             arq.write('mol modstyle 0 top CPK 0.800000 0.300000 600.000000 600.000000\n') #LIGAÇÃO
             arq.write('mol addrep top\n')
             arq.write('mol modstyle 1 top Isosurface $isoval 0 0 0 1 1\n')
-            arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD)))
-            arq.write('mol modcolor 1 top ColorID {}\n'.format(len(self.colorsVMD)))          #AZUL POSITIVO
+            if argv[-1].lower() == 'fukui':
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
+                arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO
+            if argv[-1].lower() == 'orb':
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
+                arq.write('color change rgb {} 1.000000 0.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO                
+            arq.write('mol modcolor 1 top ColorID {}\n'.format(len(self.colorsVMD)))         
             arq.write('mol modmaterial 1 top $mater\n')
             arq.write('mol addrep top\n')
             arq.write('mol modstyle 2 top Isosurface -$isoval 0 0 0 1 1\n')
-            arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))
-            arq.write('mol modcolor 2 top ColorID {}\n'.format(len(self.colorsVMD) -1))    #AMARELO NEGATIVO
+            arq.write('mol modcolor 2 top ColorID {}\n'.format(len(self.colorsVMD) -1))   
             arq.write('mol modmaterial 2 top $mater\n')
             arq.write('display distance -8.0\n')
             arq.write('display height 10\n')
@@ -236,7 +301,6 @@ class Render():
             arq.write('}\n')
             arq.write('proc cub2 {filename1 filename2 {isoval 0.05}} {\n')
             arq.write('set mater Glossy\n')
-            arq.write('color Display Background white\n')
             arq.write('display depthcue off\n')
             arq.write('display rendermode GLSL\n')
             arq.write('axes location Off\n')
