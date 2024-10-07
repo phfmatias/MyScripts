@@ -464,6 +464,9 @@ class makeslurm():
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
         self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
 
+        if 'gpu' in self.fila:
+            self.slurm += "#SBATCH --gres=gpu:1\n"
+
         if self.email:
             self.slurm += "#SBATCH --mail-type=ALL\n"
             self.slurm += "#SBATCH --mail-user={}\n".format(self.adress)
@@ -535,9 +538,9 @@ class makeslurm():
         elif self.calculo == 'g16' or self.calculo == 'g09':
             self.checkGaussian()            
             if self.calculo == 'g16':
-                self.slurm += 'module load {}\n\n'.format(self.gaussian)
+                self.slurm += '\nmodule load {}\n\n'.format(self.gaussian)
             else:
-                self.slurm += 'module load gaussian/09\n'
+                self.slurm += '\nmodule load gaussian/09\n'
             self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
             if self.infoInput == 'y':
                 for i in arq:
