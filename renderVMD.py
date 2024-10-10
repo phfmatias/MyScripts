@@ -141,7 +141,7 @@ class Render():
             if atomCub == 'I':
                 self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Pd'))
             elif atomCub == 'Y':
-                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Cl'))
+                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Br'))
             elif atomCub == 'F':
                 self.elements[atomCub] = [0.576, 1, 0.925]
             else:
@@ -168,10 +168,12 @@ class Render():
             if i == 'I':
                 self.elements[i] = self.HEX2RGB(PeriodicTable().getColor('Pd'))
             elif i == 'Y':
-                self.elements[i] = self.HEX2RGB(PeriodicTable().getColor('Cl'))
+                print(PeriodicTable().getColor('Br'))
+                self.elements[i] = self.HEX2RGB(PeriodicTable().getColor('Br'))
             elif i == 'F':
                 self.elements[i] = [0.576, 1, 0.925]
             else:
+                print(i)
                 self.elements[i] = self.HEX2RGB(PeriodicTable().getColor(i))
 
     def doTCL(self, ipt):
@@ -414,6 +416,7 @@ class Render():
                 print('Rendering...')
                 os.system('vmd {} -e showcub.vmd'.format(self.input_file.split('.')[0]))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
+                
                 #self.toRemove = 'showcub.vmd vmdscene.dat'
                 #os.system('rm {}'.format(self.toRemove))
             
