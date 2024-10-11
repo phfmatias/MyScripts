@@ -508,7 +508,7 @@ class makeslurm():
                 self.write_cache('omega1 = {}'.format(path))
             
             self.slurm += 'module load {}\n\n'.format(self.gaussian)
-            self.slurm += 'SCRATCH=/scratch/global\n\n'
+            self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
             self.slurm += 'python3 {}\n'.format(path)
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
         
@@ -522,7 +522,7 @@ class makeslurm():
                 self.write_cache('omega2 = {}'.format(path))
 
             self.slurm += 'module load {}\n\n'.format(self.gaussian)
-            self.slurm += 'SCRATCH=/scratch/global\n\n'
+            self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
             self.slurm += 'python3 {}\n'.format(path)
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
