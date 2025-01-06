@@ -181,12 +181,12 @@ class makeslurm():
             self.email = False
 
         if 'amd' in self.fila:
-            self.mem = float(self.task*2.9)
-            self.memOrca = 3000
-            self.gaussian = 'gaussian/16b01-sse4'        
+            self.mem = float(self.task*3.8)
+            self.memOrca = 3875 
+            self.gaussian = 'gaussian/16b01'        
         elif 'int' in self.fila:
-            self.mem = float(self.task*2)
-            self.memOrca = 2000
+            self.mem = float(self.task*2.2)
+            self.memOrca = 2200
             self.gaussian = 'gaussian/16b01'
 
         if self.time_info == 'n':
@@ -463,6 +463,7 @@ class makeslurm():
         self.slurm += "#SBATCH --time={}\n".format(self.time)
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
         self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
+        self.slurm += "#SBATCH --mem={}G\n".format(int(self.mem))
 
         if 'gpu' in self.fila:
             self.slurm += "#SBATCH --gres=gpu:1\n"
@@ -527,12 +528,11 @@ class makeslurm():
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
         elif self.calculo == 'cpmd':
-            self.slurm += 'module load gnu8/8.3.0 openmpi-3.1.6-gcc-8.3.0-3n5n7bo cpmd/4.3\n'
+            self.slurm += '\nmodule load openmpi/5.0.3-gcc-9.2.0-cci73za\n'
+            self.slurm += 'module load cpmd/4.3-gcc-9.2.0-u2fwv5u\n\n'
             self.slurm += 'cd $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'CPMD_INPUT=${}.inp\n'.format(arq.split('.')[0])
-            self.slurm += 'CPMD_OUTPUT=$cpmd-job{}.log\n'.format(arq.split('.')[0])
             self.slurm += 'PP=$SLURM_SUBMIT_DIR\n'
-            self.slurm += 'mpirun cpmd.x $CPMD_INPUT $PP > $CPMD_OUTPUT\n'
+            self.slurm += '\nmpirun -np $SLURM_NTASKS cpmd.x {} $PP > {}\n'.format(arq, arq.replace('{}'.format(self.extension),'.log'))
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
     
         elif self.calculo == 'g16' or self.calculo == 'g09':
@@ -560,7 +560,10 @@ class makeslurm():
                 pathOrca = result.stdout.decode().strip()
                 self.write_cache('orca = {}'.format(pathOrca))
             
-            self.slurm += '\nmodule openmpi-4.1.5-gcc-12.2.0-axqofes\n'
+            self.slurm += '\nsource /home/phfmatias/miniconda3/bin/activate leedmol310\n'
+            self.slurm += 'export PATH=/home/phfmatias/.conda/envs/leedmol310/bin:$PATH\n'
+            self.slurm += 'export LD_LIBRARY_PATH=/home/phfmatias/.conda/envs/leedmol310/lib:$LD_LIBRARY_PATH\n'
+            
             self.slurm += 'cd $SLURM_SUBMIT_DIR\n\n'
 
             if len(self.arquivos) >= 1:
