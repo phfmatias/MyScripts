@@ -204,8 +204,6 @@ class makeslurm():
             self.name = argv[1].split('.')[0]  
         else:
             self.arquivos = [x for x in listdir() if self.extension in x]
-        
-        print(self.arquivos)
                        
     def checkGaussian(self):
         temp = []
@@ -536,7 +534,6 @@ class makeslurm():
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
     
         elif self.calculo == 'g16' or self.calculo == 'g09':
-            self.checkGaussian()            
             if self.calculo == 'g16':
                 self.slurm += '\nmodule load {}\n\n'.format(self.gaussian)
             else:
@@ -628,6 +625,9 @@ class makeslurm():
             self.slurm += '       rm -rf $WRKDIR\n'
         
     def slurmWriter(self): 
+
+        if self.calculo == 'g16' or self.calculo == 'g09':
+            self.checkGaussian() 
 
         if self.infoInput == 'y':
             self.slurmHeader() 
