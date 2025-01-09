@@ -144,6 +144,8 @@ class Render():
                 self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('Br'))
             elif atomCub == 'F':
                 self.elements[atomCub] = [0.576, 1, 0.925]
+            elif atomCub == 'P':
+                self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor('P'))
             else:
                 self.elements[atomCub] = self.HEX2RGB(PeriodicTable().getColor(atomCub))
 
@@ -314,8 +316,8 @@ class Render():
                 arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
                 arq.write('color change rgb {} 1.000000 1.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO
             if argv[-1].lower() == 'orb':
-                arq.write('color change rgb {} 0.902 0.71 0.157 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
-                arq.write('color change rgb {} 0.878 0.435 0.161 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO      
+                arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL POSITIVO
+                arq.write('color change rgb {} 1.000000 0.000000 0.000000 \n'.format(len(self.colorsVMD) -1))  #AMARELO NEGATIVO       
             if argv[-1].lower() == 'spin':
                 arq.write('color change rgb {} 0.000000 0.000000 1.00000 \n'.format(len(self.colorsVMD))) #AZUL
                 arq.write('color change rgb {} 0.000000 0.000000 1.000000 \n'.format(len(self.colorsVMD) -1)) #AZUL    

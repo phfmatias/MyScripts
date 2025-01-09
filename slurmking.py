@@ -34,7 +34,7 @@ class makeslurm():
         self.home_dir = path.expanduser('~')
         self.msInfo = 'Essa versão {} suporta: g09, g16, psi4, psi4_1.8.0, orca, omega, omegaOrder, cvKing, dice, lammps e cpmd.\n'.format(self.version)
         self.calcs = ["g09", "g16", "psi4", "psi4_1.8.0", "orca", "omega", "omegaOrder", "cvKing", "dice", "lammps", "cpmd"]
-        self.filas = ['int_short', 'int_medium', 'int_large', 'amd_short', 'amd_medium', 'amd_large', 'gpu_int_k40', 'gpu_amd_v100', 'all_gpus']
+        self.filas = ['int_short', 'int_medium', 'int_large', 'amd_short', 'amd_medium', 'amd_large', 'gpu_int_k40', 'gpu_a100_92', 'gpu_a100_64']
         self.regexMemOrca = r"%maxcore\s\d*\s"
         self.regexMem = r"%[A-Za-z]+=\d+[A-Za-z]+\n"
         self.regexMemPSI4 = r"[A-Za-z]+\s*\d*\s*GB\n"
@@ -48,9 +48,10 @@ class makeslurm():
                           'amd_medium':'Pode-se alocar no máximo 128 tasks por usuário, submeter no máximo 6 jobs, e possui (9) nós disponiveis: -> [01-08]\n',
                           'amd_large':'Pode-se alocar no máximo 64 tasks por usuário, submeter no máximo 4 jobs, e possui (9) nós disponiveis: -> [01-08]\n',
                           'gpu_int_k40':'Pode-se alocar no máximo 20 tasks por usuário, submeter no máximo 2 jobs, e possui (1) nós disponiveis: -> [01]\n',
-                          'gpu_amd_v100':'Pode-se alocar no máximo 64 tasks por usuário, submeter no máximo 2 jobs, e possui (1) nós disponiveis: -> [01]\n',
-                          'all_gpus':'Pode-se alocar no máximo 84 tasks por usuário, submeter no máximo 4 jobs, e possuem (3) nós disponiveis: -> [01-02]\n'}
-
+                          'gpu_a100_192':'Pode-se alocar no máximo 192 tasks por usuário, submeter no máximo 1 job, e possui (1) nós disponiveis: -> [01]\n',
+                          'gpu_a100_64':'Pode-se alocar no máximo 64 tasks por usuário, submeter no máximo 3 job, e possui (1) nós disponiveis: -> [01]\n',
+                        }
+                          
         self.logWriter(header=True)
         self.create_cache()        
 
@@ -100,6 +101,20 @@ class makeslurm():
         if self.calculo in ['g09','g16','psi4', 'psi4_1.8.0', 'orca'] and len(argv) == 1:
             self.logWriter(askInput=True)
             self.infoInput = input() 
+            if self.infoInput == 'y':
+                self.logWriter(askDivideSlurm=True)
+                divideSlurm = input()
+                if divideSlurm == 'y':
+                    self.logWriter(askNumSlurms=True)
+                    self.numSlurms = int(input())
+                    if self.numSlurms == 1:
+                        print('Por favor, coloque pelo menos 2 slurms.')
+                        exit(0)
+                else:
+                    self.numSlurms = 1
+            else:
+                self.numSlurms = 1                
+                
             if self.calculo == 'g16' or self.calculo == 'g09':
                 self.logWriter(askCHK=True)
                 self.chkAnsw = input()
@@ -110,56 +125,66 @@ class makeslurm():
         else:
             self.infoInput = 'n'
 
-        if self.infoInput == 'y' or self.calculo in ['dice','cvKing','omega','omegaOrder']:
+        if self.numSlurms == 1:
+            if self.infoInput == 'y' or self.calculo in ['dice','cvKing','omega','omegaOrder']:
+                self.logWriter(askName=True)
+                self.name = input()
+            else:
+                self.name = ''
+
+        elif self.numSlurms > 1:
             self.logWriter(askName=True)
             self.name = input()
-        else:
-            self.name = ''
 
         self.logWriter(askQueue=True)
         readline.parse_and_bind("tab: complete")
         readline.set_completer(self.completer_fila)
         self.fila = input()
         
-        self.logWriter(askTime=True)
-        self.time_info = input()
+        # self.logWriter(askTime=True)
+        # self.time_info = input()
 
-        if self.time_info == 'y':
-            self.logWriter(askTimeValue=True)
-            time = input()
-            if 'd' in time:
-                actual_Time = int(time.split('d')[0])
+        # if self.time_info == 'y':
+        #     self.logWriter(askTimeValue=True)
+        #     time = input()
+        #     if 'd' in time:
+        #         actual_Time = int(time.split('d')[0])
 
-                if 'short' in self.fila and actual_Time > 1:    
-                    print('O tempo máximo para a fila short é de 1 dia, estamos alterando para 1 dia.')
-                    actual_Time = 1
+        #         if 'short' in self.fila and actual_Time > 1:    
+        #             print('O tempo máximo para a fila short é de 1 dia, estamos alterando para 1 dia.')
+        #             actual_Time = 1
 
-                elif 'medium' in self.fila and actual_Time > 7:
-                    print('O tempo máximo para a fila medium é de 7 dias, estamos alterando para 7 dias.')
-                    actual_Time = 7
+        #         elif 'medium' in self.fila and actual_Time > 7:
+        #             print('O tempo máximo para a fila medium é de 7 dias, estamos alterando para 7 dias.')
+        #             actual_Time = 7
                 
-                elif 'large' in self.fila and 'int' in self.fila and actual_Time > 30:
-                    print('O tempo máximo para a fila int_large é de 30 dias, estamos alterando para 30 dias.')
-                    actual_Time = 30
+        #         elif 'large' in self.fila and 'int' in self.fila and actual_Time > 30:
+        #             print('O tempo máximo para a fila int_large é de 30 dias, estamos alterando para 30 dias.')
+        #             actual_Time = 30
                 
-                elif self.fila in ['amd_large','gpu_int_k40', 'gpu_amd_v100'] and actual_Time > 15:
-                    print('O tempo máximo para a fila {} é de 15 dias, estamos alterando para 15 dias.'.format(self.fila))
-                    actual_Time = 15
-                self.time = '{}-00:00:00'.format(actual_Time)
+        #         elif self.fila in ['amd_large','gpu_int_k40'] and actual_Time > 15:
+        #             print('O tempo máximo para a fila {} é de 15 dias, estamos alterando para 15 dias.'.format(self.fila))
+        #             actual_Time = 15
+        #         elif 'gpu_a100_192' in self.fila and actual_Time > 14:
+        #             print('O tempo máximo para a fila {} é de 14 dias, estamos alterando para 14 dias.'.format(self.fila))
+        #         elif 'gpu_a100_64' in self.fila and actual_Time > 5:
+        #             print('O tempo máximo para a fila {} é de 5 dias, estamos alterando para 5 dias.'.format(self.fila))
+        #             actual_Time = 5
+        #         self.time = '{}-00:00:00'.format(actual_Time)
             
-            elif 'h' in time:
-                actual_Time = int(time.split('h')[0])
+        #     elif 'h' in time:
+        #         actual_Time = int(time.split('h')[0])
                 
-                if 'short' in self.fila and actual_Time > 24:
-                    print('O tempo máximo para a fila short é de 24 horas, estamos alterando para 24 horas.')
-                    actual_time = 24
+        #         if 'short' in self.fila and actual_Time > 24:
+        #             print('O tempo máximo para a fila short é de 24 horas, estamos alterando para 24 horas.')
+        #             actual_time = 24
 
-                if actual_Time > 24:
-                    print('Por favor, se quer mais de 24 horas, coloque em dias.')
-                    exit(0)
-                self.time = '00-{}:00:00'.format(actual_Time)
-        else:
-            pass
+        #         if actual_Time > 24:
+        #             print('Por favor, se quer mais de 24 horas, coloque em dias.')
+        #             exit(0)
+        #         self.time = '00-{}:00:00'.format(actual_Time)
+        # else:
+        #     pass
 
         self.logWriter(askTask=True)
         self.task = int(input())
@@ -170,17 +195,17 @@ class makeslurm():
         self.logWriter(askExtension=True)
         self.extension = input()
 
-        self.logWriter(askEmail=True)
-        self.email = input()
+        # self.logWriter(askEmail=True)
+        # self.email = input()
 
-        if self.email.lower() == 'y':
-            self.email = True
-            self.logWriter(askAdress=True)
-            self.adress = input()
-        else:
-            self.email = False
+        # if self.email.lower() == 'y':
+        #     self.email = True
+        #     self.logWriter(askAdress=True)
+        #     self.adress = input()
+        # else:
+        #     self.email = False
 
-        if 'amd' in self.fila:
+        if 'amd' in self.fila or 'amd_':
             self.mem = float(self.task*3.8)
             self.memOrca = 3875 
             self.gaussian = 'gaussian/16b01'        
@@ -189,6 +214,8 @@ class makeslurm():
             self.memOrca = 2200
             self.gaussian = 'gaussian/16b01'
 
+        self.time_info = 'n'
+
         if self.time_info == 'n':
             if 'short' in self.fila:
                 self.time = '1-00:00:00'
@@ -196,6 +223,12 @@ class makeslurm():
                 self.time = '7-00:00:00'
             elif 'large' in self.fila and 'int' in self.fila:
                 self.time = '30-00:00:00'
+            elif 'amd_large' in self.fila or 'gpu_int_k40' in self.fila:
+                self.time = '15-00:00:00'
+            elif 'gpu_a100_192' in self.fila:
+                self.time = '14-00:00:00'
+            elif 'gpu_a100_64' in self.fila:
+                self.time = '5-00:00:00'
             else:
                 self.time = '15-00:00:00'
 
@@ -371,7 +404,7 @@ class makeslurm():
         else:
             pass
         
-    def logWriter(self, header=False, askName=False, askInput=False, askCalc=False, askQueue=False, askTask=False, askNodes=False, askExtension=False, askEmail=False, finalMessage=False, askAdress=False, changeInput=False, askCHK=False,askTime=False, askTimeValue=False):
+    def logWriter(self, header=False, askName=False, askInput=False, askCalc=False, askQueue=False, askTask=False, askNodes=False, askExtension=False, askEmail=False, finalMessage=False, askAdress=False, changeInput=False, askCHK=False,askTime=False, askTimeValue=False, askDivideSlurm=False, askNumSlurms=False):
 
         if header:
             print("")
@@ -407,11 +440,17 @@ class makeslurm():
         elif askName:
             print('\nQual o nome do seu JOB? Este nome, aparecera na lista de trabalhos (squeue), além de ser o nome do arquivo slurm: \n')
 
+        elif askDivideSlurm:
+            print('\nDeseja dividir os cálculos em slurms separados? y ou n: \n')
+
+        elif askNumSlurms:
+            print('\nQuantos slurms serão criados? \n')
+
         elif askInput:
             print('\nDeseja colocar todos inputs no mesmo slurm? y ou n: \n')
         
         elif askQueue:
-            print('\nQual fila a ser submetida? int_short, int_medium, int_large, amd_short, amd_medium, amd_large, gpu_int_k40, gpu_amd_v100 ou all_gpus: \n')
+            print('\nQual fila a ser submetida? int_short, int_medium, int_large, amd_short, amd_medium, amd_large, gpu_int_k40, gpu_a100_192 ou gpu_a100_64: \n')
 
         elif askTime:
             print('\nVocê tem alguma estimativa de quando acabará seu cálculo? Isto pode adiantar seu cálculo na fila (y ou n): \n')
@@ -461,14 +500,14 @@ class makeslurm():
         self.slurm += "#SBATCH --time={}\n".format(self.time)
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
         self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
-        self.slurm += "#SBATCH --mem={}G\n".format(int(self.mem))
+        self.slurm += "#SBATCH --mem={:.0f}G\n".format(int(self.mem))
 
         if 'gpu' in self.fila:
             self.slurm += "#SBATCH --gres=gpu:1\n"
 
-        if self.email:
-            self.slurm += "#SBATCH --mail-type=ALL\n"
-            self.slurm += "#SBATCH --mail-user={}\n".format(self.adress)
+        # if self.email:
+        #     self.slurm += "#SBATCH --mail-type=ALL\n"
+        #     self.slurm += "#SBATCH --mail-user={}\n".format(self.adress)
         
     def slurmFooter(self, arq):
         if self.calculo == 'dice':            
@@ -623,19 +662,65 @@ class makeslurm():
             
             self.slurm += '\n\nif [ x"$APAGA_SCRATCH" = x"Y" ]; then\n'
             self.slurm += '       rm -rf $WRKDIR\n'
+    
+    def divideSlurms(self, num_arq, num_slurms):
+
+        if num_slurms <= 0:
+            raise ValueError("O número de slurms deve ser maior que zero.")
+        if num_arq <= 0:
+            raise ValueError("O número de arquivos deve ser maior que zero.")
+
+        arquivos_por_slurm = num_arq // num_slurms
+        restante = num_arq % num_slurms
+
+        if arquivos_por_slurm < 1:
+            raise ValueError("O número de arquivos por slurm deve ser maior que zero. Diminua o número de slurms ou aumente o número de arquivos.")
+
+        distribuicao = []
+
+        for i in range(num_slurms):
+            slurm_list = []
+            
+            if i == num_slurms - 1:
+                arquivos_por_slurm += restante
+                for j in range(arquivos_por_slurm):
+                    slurm_list.append(self.arquivos.pop(0))
+                distribuicao.append(slurm_list)
         
+            else:
+                for j in range(arquivos_por_slurm):
+                    slurm_list.append(self.arquivos.pop(0))
+                distribuicao.append(slurm_list)
+        
+        return distribuicao
+
+
     def slurmWriter(self): 
 
         if self.calculo == 'g16' or self.calculo == 'g09':
             self.checkGaussian() 
 
         if self.infoInput == 'y':
-            self.slurmHeader() 
-            self.slurmFooter(self.arquivos)
-            [print('Arquivo {} adicionado ao slurm com sucesso!'.format(x)) for x in self.arquivos]
-            slurmArq = open(self.name+'.slurm','w')
-            slurmArq.write(self.slurm)
-            slurmArq.close()
+            if self.numSlurms > 1:
+                list_files = self.divideSlurms(len(self.arquivos), self.numSlurms)
+
+                for i in range(self.numSlurms):
+                    self.slurmHeader()
+                    self.slurmFooter(list_files[i])
+                    name = self.name+str(i+1)
+                    self.slurm = self.slurm.replace('#SBATCH --job-name={}\n'.format(self.name), '#SBATCH --job-name={}\n'.format(name))
+                    slurmArq = open(name+'.slurm','w')
+                    slurmArq.write(self.slurm)
+                    slurmArq.close()
+                    self.slurm = ''
+
+            else:
+                self.slurmHeader()
+                self.slurmFooter(self.arquivos)
+                self.slurm = self.slurm.replace('#SBATCH --job-name=\n', '#SBATCH --job-name={}\n'.format(self.name))
+                slurmArq = open(self.name+'.slurm','w')
+                slurmArq.write(self.slurm)
+                slurmArq.close()
 
         elif self.infoInput == 'n':   
             if len(self.arquivos) > 1:
