@@ -45,10 +45,7 @@ class MODB3LYP():
                 start = i+1
 
         for i in range(start, len(arq)):
-            if '\n' == arq[i]:
-                break
-            else:
-                self.mol += arq[i]
+            self.mol += arq[i]
 
     def write_input(self):
         for i in range(self.initial, self.final, self.step):

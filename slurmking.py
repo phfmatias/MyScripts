@@ -32,9 +32,9 @@ class makeslurm():
     def __init__(self):
         self.version = "2.1.0"
         self.home_dir = path.expanduser('~')
-        self.msInfo = 'Essa versão {} suporta: g09, g16, psi4, psi4_1.8.0, orca, omega, omegaOrder, cvKing, dice, lammps e cpmd.\n'.format(self.version)
-        self.calcs = ["g09", "g16", "psi4", "psi4_1.8.0", "orca", "omega", "omegaOrder", "cvKing", "dice", "lammps", "cpmd"]
-        self.filas = ['int_short', 'int_medium', 'int_large', 'amd_short', 'amd_medium', 'amd_large', 'gpu_int_k40', 'gpu_a100_92', 'gpu_a100_64']
+        self.msInfo = 'Essa versão {} suporta: g09, g16, psi4, psi4_1.8.0, orca, orca_phf, omega, omegaOrder, cvKing, dice, lammps e cpmd.\n'.format(self.version)
+        self.calcs = ["g09", "g16", "psi4", "psi4_1.8.0", "orca", "orca_phf", "omega", "omegaOrder", "cvKing", "dice", "lammps", "cpmd"]
+        self.filas = ['int_short', 'int_medium', 'int_large', 'amd_short', 'amd_medium', 'amd_large', 'gpu_int_k40', 'gpu_a100_192', 'gpu_a100_64']
         self.regexMemOrca = r"%maxcore\s\d*\s"
         self.regexMem = r"%[A-Za-z]+=\d+[A-Za-z]+\n"
         self.regexMemPSI4 = r"[A-Za-z]+\s*\d*\s*GB\n"
@@ -98,7 +98,7 @@ class makeslurm():
         readline.set_completer(self.completer)
         self.calculo = input()
 
-        if self.calculo in ['g09','g16','psi4', 'psi4_1.8.0', 'orca'] and len(argv) == 1:
+        if self.calculo in ['g09','g16','psi4', 'psi4_1.8.0', 'orca', 'orca_phf'] and len(argv) == 1:
             self.logWriter(askInput=True)
             self.infoInput = input() 
             if self.infoInput == 'y':
@@ -119,10 +119,11 @@ class makeslurm():
                 self.logWriter(askCHK=True)
                 self.chkAnsw = input()
         
-        elif len(argv) > 1:
+        elif self.calculo in ['dice','cvKing','omega','omegaOrder']:
+            self.numSlurms = 1
             self.infoInput = 'n'
 
-        else:
+        if len(argv) > 1:
             self.infoInput = 'n'
 
         if self.numSlurms == 1:
@@ -205,14 +206,21 @@ class makeslurm():
         # else:
         #     self.email = False
 
-        if 'amd' in self.fila or 'amd_':
-            self.mem = float(self.task*3.8)
-            self.memOrca = 3875 
-            self.gaussian = 'gaussian/16b01'        
-        elif 'int' in self.fila:
-            self.mem = float(self.task*2.2)
-            self.memOrca = 2200
-            self.gaussian = 'gaussian/16b01'
+        self.gaussian = 'gaussian/16b01'       
+
+        if 'amd' in self.fila or 'amd_' in self.fila:
+            self.mem = float(self.task*2.9)
+            self.memOrca = 2900  
+        elif 'int' in self.fila and 'gpu' not in self.fila:
+            self.mem = float(self.task*2)
+            self.memOrca = 2000
+        elif 'gpu' in self.fila:
+            if 'a100' in self.fila:
+                self.mem = float(self.task*3)
+                self.memOrca = 3000
+            else:
+                self.mem = float(self.task*5)
+                self.memOrca = 5000
 
         self.time_info = 'n'
 
@@ -226,9 +234,9 @@ class makeslurm():
             elif 'amd_large' in self.fila or 'gpu_int_k40' in self.fila:
                 self.time = '15-00:00:00'
             elif 'gpu_a100_192' in self.fila:
-                self.time = '14-00:00:00'
-            elif 'gpu_a100_64' in self.fila:
                 self.time = '5-00:00:00'
+            elif 'gpu_a100_64' in self.fila:
+                self.time = '14-00:00:00'
             else:
                 self.time = '15-00:00:00'
 
@@ -316,7 +324,7 @@ class makeslurm():
                 toWrite = open(arq,'w')
                 toWrite.write(rlines)
 
-        elif self.calculo == 'orca':
+        elif self.calculo == 'orca' or self.calculo == 'orca_phf':
             for arq in self.arquivos:
                 rlines = open(arq,'r').read()
                 if search(self.regexMemOrca, rlines, M):
@@ -435,7 +443,7 @@ class makeslurm():
             print("-"*len(self.msInfo))
 
         elif askCalc:
-            print('\nDeseja criar slurm para g09, g16, psi4, psi4_1.8.0, orca, omega, omegaOrder, cvKing, dice, lammps ou cpmd? \n')
+            print('\nDeseja criar slurm para g09, g16, psi4, psi4_1.8.0, orca, orca_phf omega, omegaOrder, cvKing, dice, lammps ou cpmd? \n')
 
         elif askName:
             print('\nQual o nome do seu JOB? Este nome, aparecera na lista de trabalhos (squeue), além de ser o nome do arquivo slurm: \n')
@@ -500,7 +508,7 @@ class makeslurm():
         self.slurm += "#SBATCH --time={}\n".format(self.time)
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
         self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
-        self.slurm += "#SBATCH --mem={:.0f}G\n".format(int(self.mem))
+        # self.slurm += "#SBATCH --mem={:.0f}G\n".format(int(self.mem))
 
         if 'gpu' in self.fila:
             self.slurm += "#SBATCH --gres=gpu:1\n"
@@ -546,7 +554,7 @@ class makeslurm():
                 self.write_cache('omega1 = {}'.format(path))
             
             self.slurm += 'module load {}\n\n'.format(self.gaussian)
-            self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
+            self.slurm += '\nexport GAUSS_SCRDIR=/scratch/global\n\n'
             self.slurm += 'python3 {}\n'.format(path)
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
         
@@ -560,7 +568,7 @@ class makeslurm():
                 self.write_cache('omega2 = {}'.format(path))
 
             self.slurm += 'module load {}\n\n'.format(self.gaussian)
-            self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
+            self.slurm += '\nexport GAUSS_SCRDIR=/scratch/global\n\n'
             self.slurm += 'python3 {}\n'.format(path)
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
@@ -577,7 +585,7 @@ class makeslurm():
                 self.slurm += '\nmodule load {}\n\n'.format(self.gaussian)
             else:
                 self.slurm += '\nmodule load gaussian/09\n'
-            self.slurm += 'export GAUSS_SCRDIR=/scratch/global\n\n'
+            self.slurm += '\nexport GAUSS_SCRDIR=/scratch/global\n\n'
             if self.infoInput == 'y':
                 for i in arq:
                     self.slurm += '{} {}\n'.format(self.calculo.lower(),i)
@@ -586,8 +594,8 @@ class makeslurm():
                 self.slurm += '{} {}\n'.format(self.calculo.lower(),arq)
 
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
-            
-        elif self.calculo == 'orca':
+
+        elif self.calculo == 'orca_phf':
             self.checkOrca()
             pathOrca = self.check_cache('orca')
 
@@ -599,17 +607,111 @@ class makeslurm():
             self.slurm += '\nsource /home/phfmatias/miniconda3/bin/activate leedmol310\n'
             self.slurm += 'export PATH=/home/phfmatias/.conda/envs/leedmol310/bin:$PATH\n'
             self.slurm += 'export LD_LIBRARY_PATH=/home/phfmatias/.conda/envs/leedmol310/lib:$LD_LIBRARY_PATH\n'
+            self.slurm += '\nexport scratchlocation=/scratch/global\n\n'
             
-            self.slurm += 'cd $SLURM_SUBMIT_DIR\n\n'
+            self.slurm += 'if [ ! -d $scratchlocation/$USER ]\n'
+            self.slurm += 'then\n'
+            self.slurm += 'mkdir -p $scratchlocation/$USER\n'
+            self.slurm += 'fi\n\n'
+            
+            self.slurm +='tdir=$(mktemp -d $scratchlocation/$USER/orcajob__$SLURM_JOB_ID-XXXX)\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.inp $tdir/\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.gbw $tdir/\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.xyz $tdir/\n'
+            self.slurm +='cd $tdir\n\n'
 
-            if len(self.arquivos) >= 1:
-                if self.infoInput == 'y':
-                    for i in self.arquivos:                 
-                        self.slurm += '{} {} > {}\n'.format(pathOrca,i, i.replace('{}'.format(self.extension),'.log'))
-                else:
-                    self.slurm += '{} {} > {}\n'.format(pathOrca,self.arquivos[0], self.arquivos[0].replace('{}'.format(self.extension),'.log'))
+            if self.infoInput == 'y':
+                for i in arq:
+                    self.slurm += '{} {} > {}\n\n'.format(pathOrca,i, i.replace('{}'.format(self.extension),'.log'))
+            
+            else:
+                self.slurm += '{} {} > {}\n\n'.format(pathOrca,arq, arq.replace('{}'.format(self.extension),'.log'))       
                 
-                self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
+            self.slurm += 'cp $tdir/*.gbw $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.engrad $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.xyz $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.loc $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.qro $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.uno $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.unso $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.uco $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.hess $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.cis $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.dat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.mp2nat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.nat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfp_fod $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfp $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfr $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.nbo $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.log $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/FILE.47 $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*_property.txt $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*spin* $SLURM_SUBMIT_DIR\n'
+            self.slurm += '\n\n'
+            self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
+
+        elif self.calculo == 'orca':
+            self.checkOrca()
+            pathOrca = self.check_cache('orca')
+
+            if 'amd' in self.fila or 'amd_' in self.fila or 'a100' in self.fila:
+                self.slurm +='\nexport LD_LIBRARY_PATH=/exports/software/spack/opt/spack/linux-rocky8-zen2/gcc-12.2.0/openmpi-4.1.6-2qahlnt3y35wrkvkbhxyva5gg5km4k4d/lib:$LD_LIBRARY_PATH\n'
+                self.slurm +='\nmodule load openmpi/4.1.6-gcc-12.2.0-2qahlnt\n'
+
+
+            elif 'int' in self.fila or 'int_' in self.fila or 'gpu_int' in self.fila:
+                self.slurm +='\nexport LD_LIBRARY_PATH=/exports/software/spack/opt/spack/linux-rocky8-skylake_avx512/gcc-12.2.0/openmpi-4.1.6-ltrjkpgvuern4vjkpzhwxep5dukbofrq/lib:$LD_LIBRARY_PATH\n'
+                self.slurm +='\nmodule load openmpi/4.1.6-gcc-12.2.0-ltrjkpg\n'
+                    
+            if pathOrca == False:
+                result = subprocess.run(['find', self.home_dir, '-type', 'f', '-name', 'orca'], stdout=subprocess.PIPE)
+                pathOrca = result.stdout.decode().strip()
+                self.write_cache('orca = {}'.format(pathOrca))
+            
+            self.slurm += '\nexport scratchlocation=/scratch/global\n\n'
+            
+            self.slurm += 'if [ ! -d $scratchlocation/$USER ]\n'
+            self.slurm += 'then\n'
+            self.slurm += 'mkdir -p $scratchlocation/$USER\n'
+            self.slurm += 'fi\n\n'
+            
+            self.slurm +='tdir=$(mktemp -d $scratchlocation/$USER/orcajob__$SLURM_JOB_ID-XXXX)\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.inp $tdir/\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.gbw $tdir/\n'
+            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.xyz $tdir/\n'
+            self.slurm +='cd $tdir\n\n'
+
+            if self.infoInput == 'y':
+                for i in arq:
+                    self.slurm += '{} {} > {}\n\n'.format(pathOrca,i, i.replace('{}'.format(self.extension),'.log'))
+            
+            else:
+                self.slurm += '{} {} > {}\n\n'.format(pathOrca,arq, arq.replace('{}'.format(self.extension),'.log'))                
+
+            self.slurm += 'cp $tdir/*.gbw $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.engrad $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.xyz $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.loc $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.qro $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.uno $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.unso $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.uco $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.hess $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.cis $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.dat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.mp2nat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.nat $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfp_fod $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfp $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.scfr $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.nbo $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*.log $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/FILE.47 $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*_property.txt $SLURM_SUBMIT_DIR\n'
+            self.slurm += 'cp $tdir/*spin* $SLURM_SUBMIT_DIR\n'
+            self.slurm += '\n\n'
+            self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
             
         elif self.calculo == 'lammps':
             self.slurm += 'cd $SLURM_SUBMIT_DIR\n'
@@ -713,7 +815,6 @@ class makeslurm():
                     slurmArq.write(self.slurm)
                     slurmArq.close()
                     self.slurm = ''
-
             else:
                 self.slurmHeader()
                 self.slurmFooter(self.arquivos)

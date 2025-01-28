@@ -27,5 +27,8 @@ print('\n')
 x = popen("squeue -p gpu_int_k40 --noheader | wc -l").read()
 print("GPU_INTEL -> {}".format(x), end='')
 
-x = popen("squeue -p gpu_amd_v100 --noheader | wc -l").read()
-print("GPU_AMD -> {}".format(x), end='')
+x = popen("squeue -p gpu_a100_192 --noheader | wc -l").read()
+print("GPU_AMD_192 -> {}".format(x), end='')
+
+x = popen("squeue -p gpu_a100_64 --noheader | wc -l").read()
+print("GPU_AMD_64 -> {}".format(x), end='')
