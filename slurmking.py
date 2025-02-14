@@ -40,7 +40,7 @@ class makeslurm():
         self.regexMemPSI4 = r"[A-Za-z]+\s*\d*\s*GB\n"
         self.regexMemPSI4_mb = r"[A-Za-z]+\s*\d*\s*mb\n"
         self.regexNproc = r"%[A-Za-z]+=\d+\n"
-        self.regexCHK = r"%[A-Za-z]+=.+\.chk\n"
+        self.regexCHK = r"%chk=.+\.chk\n"
         self.filasInfo = {'int_short':'Pode-se alocar no máximo 80 tasks por usuário, submeter no máximo 10 jobs, e possui (8) nós disponiveis: -> [01-08]\n',
                           'int_medium':'Pode-se alocar no máximo 40 tasks por usuário, submeter no máximo 6 jobs, e possui (8) nós disponiveis: -> [01-08]\n',
                           'int_large':'Pode-se alocar no máximo 20 tasks por usuário, submeter no máximo 4 jobs, e possui (8) nós disponiveis: -> [01-08]\n',
@@ -300,7 +300,7 @@ class makeslurm():
 
         self.logWriter(changeInput=True)
 
-        if self.calculo == 'g16' or self.calculo == 'g09':            
+        if self.calculo == 'g16' or self.calculo == 'g09':     
             for arq in self.arquivos: 
                 if self.chkAnsw == 'y':
                     self.chk = arq.split('.')[0]
@@ -316,7 +316,8 @@ class makeslurm():
                     rlines = '%nprocshared={}\n'.format(self.task)+rlines
                 if search(self.regexCHK,rlines, M):
                     if self.chkAnsw == 'y':
-                        rlines = sub('%[A-Za-z]+=\w+\.chk\n','%chk={}.chk\n'.format(self.chk),rlines)
+                        rlines = sub(r'%chk=.+\.chk\n', '%chk={}.chk\n'.format(self.chk), rlines)
+
                 else:
                     if self.chkAnsw == 'y':
                         rlines = '%chk={}.chk\n'.format(self.chk)+rlines
@@ -767,6 +768,8 @@ class makeslurm():
     
     def divideSlurms(self, num_arq, num_slurms):
 
+        tmp_arquivos = self.arquivos.copy()
+
         if num_slurms <= 0:
             raise ValueError("O número de slurms deve ser maior que zero.")
         if num_arq <= 0:
@@ -786,12 +789,12 @@ class makeslurm():
             if i == num_slurms - 1:
                 arquivos_por_slurm += restante
                 for j in range(arquivos_por_slurm):
-                    slurm_list.append(self.arquivos.pop(0))
+                    slurm_list.append(tmp_arquivos.pop(0))
                 distribuicao.append(slurm_list)
         
             else:
                 for j in range(arquivos_por_slurm):
-                    slurm_list.append(self.arquivos.pop(0))
+                    slurm_list.append(tmp_arquivos.pop(0))
                 distribuicao.append(slurm_list)
         
         return distribuicao
