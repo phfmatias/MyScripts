@@ -196,15 +196,15 @@ class makeslurm():
         self.logWriter(askExtension=True)
         self.extension = input()
 
-        # self.logWriter(askEmail=True)
-        # self.email = input()
+        self.logWriter(askEmail=True)
+        self.email = input()
 
-        # if self.email.lower() == 'y':
-        #     self.email = True
-        #     self.logWriter(askAdress=True)
-        #     self.adress = input()
-        # else:
-        #     self.email = False
+        if self.email.lower() == 'y':
+            self.email = True
+            self.logWriter(askAdress=True)
+            self.adress = input()
+        else:
+            self.email = False
 
         self.gaussian = 'gaussian/16b01'       
 
@@ -514,9 +514,9 @@ class makeslurm():
         if 'gpu' in self.fila:
             self.slurm += "#SBATCH --gres=gpu:1\n"
 
-        # if self.email:
-        #     self.slurm += "#SBATCH --mail-type=ALL\n"
-        #     self.slurm += "#SBATCH --mail-user={}\n".format(self.adress)
+        if self.email:
+            self.slurm += "#SBATCH --mail-type=END\n"
+            self.slurm += "#SBATCH --mail-user={}\n".format(self.adress)
         
     def slurmFooter(self, arq):
         if self.calculo == 'dice':            

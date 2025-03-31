@@ -30,6 +30,10 @@ class Fukui():
         if argv[-1] == 'external':
             self.control()
             self.runMWFN(True, True)
+        
+        if argv[-1] == 'plot':
+            self.systemName = argv[-2]
+            self.plotFukui()
 
     def control(self):
         self.input = 0
@@ -249,6 +253,9 @@ q
         
 if __name__ == '__main__':
     x = Fukui()
+
+    if argv[-1] == 'plot':
+        x.plotFukui()
 
 '''
 INPUT EXAMPLE
