@@ -17,7 +17,7 @@
 ##   IMPORTS #
 
 from re import sub, M, search
-from os import listdir, path, getcwd
+from os import listdir, path, getcwd, popen
 from sys import argv
 import subprocess
 
@@ -32,8 +32,8 @@ class makeslurm():
     def __init__(self):
         self.version = "2.1.0"
         self.home_dir = path.expanduser('~')
-        self.msInfo = 'Essa versão {} suporta: g09, g16, psi4, psi4_1.8.0, orca, orca_phf, omega, omegaOrder, cvKing, dice, lammps e cpmd.\n'.format(self.version)
-        self.calcs = ["g09", "g16", "psi4", "psi4_1.8.0", "orca", "orca_phf", "omega", "omegaOrder", "cvKing", "dice", "lammps", "cpmd"]
+        self.msInfo = 'Essa versão {} suporta: g09, g16, psi4, psi4_1.8.0, orca, orca_phf, omega, omegaOrder, cvKing, dice, gromacs, lammps e cpmd.\n'.format(self.version)
+        self.calcs = ["g09", "g16", "psi4", "psi4_1.8.0", "orca", "orca_phf", "omega", "omegaOrder", "cvKing", "dice", "gromacs", "lammps", "cpmd"]
         self.filas = ['int_short', 'int_medium', 'int_large', 'amd_short', 'amd_medium', 'amd_large', 'gpu_int_k40', 'gpu_a100_192', 'gpu_a100_64']
         self.regexMemOrca = r"%maxcore\s\d*\s"
         self.regexMem = r"%[A-Za-z]+=\d+[A-Za-z]+\n"
@@ -90,6 +90,17 @@ class makeslurm():
             return options[state]
         else:
             return None
+        
+    def completer_gromacs(self, text, state):
+        options = ['min', 'nvt', 'npt', 'md','todos']
+        if text == '':
+            return options[state]
+        else:
+            options = [calc_opt for calc_opt in options if calc_opt.startswith(text)]
+            if state < len(options):
+                return options[state]
+            else:
+                return None
 
     def getInfos(self):
 
@@ -119,7 +130,7 @@ class makeslurm():
                 self.logWriter(askCHK=True)
                 self.chkAnsw = input()
         
-        elif self.calculo in ['dice','cvKing','omega','omegaOrder']:
+        elif self.calculo in ['dice','cvKing','omega','omegaOrder','gromacs']:
             self.numSlurms = 1
             self.infoInput = 'n'
 
@@ -127,7 +138,7 @@ class makeslurm():
             self.infoInput = 'n'
 
         if self.numSlurms == 1:
-            if self.infoInput == 'y' or self.calculo in ['dice','cvKing','omega','omegaOrder']:
+            if self.infoInput == 'y' or self.calculo in ['dice','cvKing','omega','omegaOrder', 'gromacs']:
                 self.logWriter(askName=True)
                 self.name = input()
             else:
@@ -137,11 +148,26 @@ class makeslurm():
             self.logWriter(askName=True)
             self.name = input()
 
+        if self.calculo == 'gromacs': 
+            self.logWriter(askGromacs=True)
+            readline.parse_and_bind("tab: complete")
+            readline.set_completer(self.completer_gromacs)
+            self.gromacs = input()
+            if self.gromacs == 'todos':
+                self.gromacs2 = 1
+            else:
+                self.logWriter(askGromacs2=True)
+                self.gromacs2 = str(input())
+                self.gromacs = self.gromacs+self.gromacs2
+
+            self.gmx_input = self.gromacs
+
         self.logWriter(askQueue=True)
         readline.parse_and_bind("tab: complete")
         readline.set_completer(self.completer_fila)
         self.fila = input()
-        
+
+
         # self.logWriter(askTime=True)
         # self.time_info = input()
 
@@ -193,8 +219,14 @@ class makeslurm():
         self.logWriter(askNodes=True)
         self.nodes = int(input())
 
-        self.logWriter(askExtension=True)
-        self.extension = input()
+
+        extensions = {'cvKing':'.in', 'dice':'.in', 'omega':'.in', 'omegaOrder':'.in', 'gromacs':'.mdp'}
+
+        if self.calculo not in extensions.keys():
+            self.logWriter(askExtension=True)
+            self.extension = input()
+        else:
+            self.extension = extensions[self.calculo]
 
         self.logWriter(askEmail=True)
         self.email = input()
@@ -245,6 +277,12 @@ class makeslurm():
             self.name = argv[1].split('.')[0]  
         else:
             self.arquivos = [x for x in listdir() if self.extension in x]
+
+        if self.calculo == 'gromacs':
+            if self.gromacs == 'todos':
+                self.arquivos = [x for x in listdir() if '.mdp' in x]
+            else:
+                self.arquivos = [x for x in listdir() if '{}.mdp'.format(self.gromacs) in x]        
                        
     def checkGaussian(self):
         temp = []
@@ -413,7 +451,7 @@ class makeslurm():
         else:
             pass
         
-    def logWriter(self, header=False, askName=False, askInput=False, askCalc=False, askQueue=False, askTask=False, askNodes=False, askExtension=False, askEmail=False, finalMessage=False, askAdress=False, changeInput=False, askCHK=False,askTime=False, askTimeValue=False, askDivideSlurm=False, askNumSlurms=False):
+    def logWriter(self, header=False, askName=False, askInput=False, askCalc=False, askQueue=False, askTask=False, askNodes=False, askExtension=False, askEmail=False, finalMessage=False, askAdress=False, changeInput=False, askCHK=False,askTime=False, askTimeValue=False, askDivideSlurm=False, askNumSlurms=False, askGromacs=False, askGromacs2=False):
 
         if header:
             print("")
@@ -444,7 +482,7 @@ class makeslurm():
             print("-"*len(self.msInfo))
 
         elif askCalc:
-            print('\nDeseja criar slurm para g09, g16, psi4, psi4_1.8.0, orca, orca_phf omega, omegaOrder, cvKing, dice, lammps ou cpmd? \n')
+            print('\nDeseja criar slurm para g09, g16, psi4, psi4_1.8.0, orca, orca_phf omega, omegaOrder, cvKing, dice, gromacs, lammps ou cpmd? \n')
 
         elif askName:
             print('\nQual o nome do seu JOB? Este nome, aparecera na lista de trabalhos (squeue), além de ser o nome do arquivo slurm: \n')
@@ -459,6 +497,28 @@ class makeslurm():
             print('\nDeseja colocar todos inputs no mesmo slurm? y ou n: \n')
         
         elif askQueue:
+            int_short = popen('squeue -p int_short --noheader | wc -l').read().strip()
+            amd_short = popen('squeue -p amd_short --noheader | wc -l').read().strip()
+            int_medium = popen('squeue -p int_medium --noheader | wc -l').read().strip()
+            amd_medium = popen('squeue -p amd_medium --noheader | wc -l').read().strip()
+            int_large = popen('squeue -p int_large --noheader | wc -l').read().strip()
+            amd_large = popen('squeue -p amd_large --noheader | wc -l').read().strip()
+            gpu_int_k40 = popen('squeue -p gpu_int_k40 --noheader | wc -l').read().strip()
+            gpu_a100_192 = popen('squeue -p gpu_a100_192 --noheader | wc -l').read().strip()
+            gpu_a100_64 = popen('squeue -p gpu_a100_64 --noheader | wc -l').read().strip()
+
+            title_table = 'Número de jobs na fila:'
+            print("\n+------+--------+--------+--------+------------------------------+")
+            print(f"| {title_table.center(66 - 4)} |")
+            print("+------+--------+--------+--------+------------------------------+")
+            print("| Node | SHORT  | MEDIUM | LARGE  | GPU                          |")
+            print("+------+--------+--------+--------+------------------------------+")
+            gpu_int = f"INT_K40: {gpu_int_k40}"
+            print(f"| INT  | {str(int_short).ljust(6)} | {str(int_medium).ljust(6)} | {str(int_large).ljust(6)} | {gpu_int.ljust(28)} |")
+            gpu_amd = f"A100_192: {gpu_a100_192}, A100_64: {gpu_a100_64}"
+            print(f"| AMD  | {str(amd_short).ljust(6)} | {str(amd_medium).ljust(6)} | {str(amd_large).ljust(6)} | {gpu_amd.ljust(28)} |")
+            print("+------+--------+--------+--------+------------------------------+")
+
             print('\nQual fila a ser submetida? int_short, int_medium, int_large, amd_short, amd_medium, amd_large, gpu_int_k40, gpu_a100_192 ou gpu_a100_64: \n')
 
         elif askTime:
@@ -480,6 +540,13 @@ class makeslurm():
         elif askExtension:
             print('\nQual a extensão do input: \n')
 
+        elif askGromacs:
+            print('\nQual etapa irá rodar? Minimização (min), Equilibração NVT (nvt), Equilibração NPT(npt), Produção (md) ou Todos?\n')
+            print('[min, nvt, npt, md, todos]\n')
+
+        elif askGromacs2:
+            print('\nSe esta for uma etapa subsequente, como npt2, indique o número correspondente da etapa (exemplo: 2 para npt2), caso contrário, coloque 1.\n')
+            
         elif askEmail:
             print('\nDeseja receber notificação via e-mail? (y ou n): \n')   
 
@@ -571,6 +638,14 @@ class makeslurm():
             self.slurm += 'module load {}\n\n'.format(self.gaussian)
             self.slurm += '\nexport GAUSS_SCRDIR=/scratch/global\n\n'
             self.slurm += 'python3 {}\n'.format(path)
+            self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
+
+        elif self.calculo == 'gromacs':
+            self.slurm += '\nmodule load openmpi/5.0.3-gcc-12.2.0-5orcrye\n'
+            self.slurm += 'moadule load gromacs/2024.2-gcc-12.2.0-5llb5cr'           
+
+            self.slurm += '\n\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
+
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
         elif self.calculo == 'cpmd':
@@ -801,7 +876,6 @@ class makeslurm():
 
 
     def slurmWriter(self): 
-
         if self.calculo == 'g16' or self.calculo == 'g09':
             self.checkGaussian() 
 
@@ -829,6 +903,8 @@ class makeslurm():
         elif self.infoInput == 'n':   
             if len(self.arquivos) > 1:
                 for input in self.arquivos:
+                    if self.calculo == 'gromacs' and self.gromacs == 'todos':
+                        self.gmx_input = input
                     self.slurmHeader()
                     self.slurmFooter(input)
                     self.name = input.replace('{}'.format(self.extension),'')
