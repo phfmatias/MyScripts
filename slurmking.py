@@ -158,7 +158,8 @@ class makeslurm():
             else:
                 self.logWriter(askGromacs2=True)
                 self.gromacs2 = str(input())
-                self.gromacs = self.gromacs+self.gromacs2
+                if self.gromacs2 != str(1):
+                    self.gromacs = self.gromacs+self.gromacs2
 
             self.gmx_input = self.gromacs
 
@@ -916,7 +917,10 @@ class makeslurm():
                     self.name = ''
             
             else:
-                input = self.arquivos[0]
+                if self.calculo == 'gromacs':
+                    input = self.gmx_input
+                else:
+                    input = self.arquivos[0]
                 self.slurmHeader()
                 self.slurmFooter(input)
                 self.name = input.replace('{}'.format(self.extension),'')   
