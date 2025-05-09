@@ -391,7 +391,6 @@ class Render():
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-                #os.system('rm render.tcl')
 
             else:
                 print('Rendering...')

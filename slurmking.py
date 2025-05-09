@@ -643,7 +643,7 @@ class makeslurm():
 
         elif self.calculo == 'gromacs':
             self.slurm += '\nmodule load openmpi/5.0.3-gcc-12.2.0-5orcrye\n'
-            self.slurm += 'moadule load gromacs/2024.2-gcc-12.2.0-5llb5cr'           
+            self.slurm += 'module load gromacs/2024.2-gcc-12.2.0-5llb5cr'           
 
             self.slurm += '\n\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
 
