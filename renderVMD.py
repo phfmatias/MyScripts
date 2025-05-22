@@ -289,8 +289,9 @@ class Render():
             c = 0
             for key, value in self.elements.items():
                 if len(key) == 2:
-                    if key == 'Cl':
-                        pass
+                    if key == 'Y':
+                        arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
+                        arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, 0.0, 1.0, 0.0))
                     else:
                         arq.write('color Name {} {}\n'.format(key[0], self.colorsVMD[c]))
                 else:

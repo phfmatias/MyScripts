@@ -16,7 +16,7 @@
 
 # This should be the same label as in GaussView
 # atoms_to_get = ['O_167 H_44', 'H_30 O_184', 'H_3 O_185', 'H_14 O_107', 'O_152 H_63', 'O_140 H_52', 'O_139 H_79', 'H_93 O_122']
-atoms_to_get = ['N_7 H_8','H_8 O_3', 'N_4 N_7']
+atoms_to_get = ['N_11 N_1','N_1 H_10', 'H_10 O_13']
 
 
 cp_dict = {}
