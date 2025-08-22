@@ -655,7 +655,7 @@ class makeslurm():
 
             if 'gpu' in self.fila:
                 self.slurm += '\n\nexport OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
-                self.slurm += '\n\ngmx_mpirun mdrun -deffnm {} -ntomp {} -nb gpu -pme gpu -bonded gpu\n'
+                self.slurm += '\n\ngmx_mpirun mdrun -deffnm {} -ntomp {} -nb gpu -pme gpu -bonded gpu\n'.format(self.gmx_input, self.task)
             else:
                 self.slurm += '\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
 
