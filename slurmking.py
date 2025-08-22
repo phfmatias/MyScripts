@@ -130,7 +130,7 @@ class makeslurm():
                 self.logWriter(askCHK=True)
                 self.chkAnsw = input()
         
-        elif self.calculo in ['dice','cvKing','omega','omegaOrder','gromacs']:
+        elif self.calculo in ['dice','cvKing','omega','omegaOrder','gromacs','lammps']:
             self.numSlurms = 1
             self.infoInput = 'n'
 
@@ -242,18 +242,21 @@ class makeslurm():
         self.gaussian = 'gaussian/16b01'       
 
         if 'amd' in self.fila or 'amd_' in self.fila:
-            self.mem = float(self.task*2.9)
-            self.memOrca = 2900  
+            self.mem = int(self.task*3.8)
+            self.memOrca = 3800  
         elif 'int' in self.fila and 'gpu' not in self.fila:
-            self.mem = float(self.task*2)
-            self.memOrca = 2000
+            self.mem = int(self.task*2.2)
+            self.memOrca = 2200
         elif 'gpu' in self.fila:
-            if 'a100' in self.fila:
-                self.mem = float(self.task*3)
-                self.memOrca = 3000
+            if 'a100' in self.fila and '192' in self.fila:
+                self.mem = int(self.task*4)
+                self.memOrca = 4027
+            elif 'a100' in self.fila and '64' in self.fila:
+                self.mem = int(self.task*4)
+                self.memOrca = 4096
             else:
-                self.mem = float(self.task*5)
-                self.memOrca = 5000
+                self.mem = int(self.task*5)
+                self.memOrca = 6000
 
         self.time_info = 'n'
 
@@ -576,8 +579,12 @@ class makeslurm():
         self.slurm += "#SBATCH --partition={}\n".format(self.fila)
         self.slurm += "#SBATCH --time={}\n".format(self.time)
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
-        self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
-        # self.slurm += "#SBATCH --mem={:.0f}G\n".format(int(self.mem))
+        if self.fila == 'gpu' and self.calculo == 'gromacs':
+            self.slurm += '#SBATCH --ntasks=1\n'
+            self.slurm += "#SBATCH --cpus-per-task={}\n".format(self.task)
+        else:
+            self.slurm += "#SBATCH --ntasks={}\n".format(self.task)
+        self.slurm += "#SBATCH --mem={:.0f}G\n".format(int(self.mem))
 
         if 'gpu' in self.fila:
             self.slurm += "#SBATCH --gres=gpu:1\n"
@@ -642,10 +649,15 @@ class makeslurm():
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
         elif self.calculo == 'gromacs':
+            
             self.slurm += '\nmodule load openmpi/5.0.3-gcc-12.2.0-5orcrye\n'
             self.slurm += 'module load gromacs/2024.2-gcc-12.2.0-5llb5cr'           
 
-            self.slurm += '\n\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
+            if 'gpu' in self.fila:
+                self.slurm += '\n\nexport OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
+                self.slurm += '\n\ngmx_mpirun mdrun -deffnm {} -ntomp {} -nb gpu -pme gpu -bonded gpu\n'
+            else:
+                self.slurm += '\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
 
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 

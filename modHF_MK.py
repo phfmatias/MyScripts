@@ -10,8 +10,8 @@
 ##   Version:      ['0.0.1']
 ##   Status:       ['Development']
 ##   Language:     ['Python']
-##   Description:  ['']
-##   Usage:		   ['']
+##   Description:  ['A Script to generate modHF inputs. The log files must be in the same directory as the script.']
+##   Usage:		   ['python modHF_Picloram.py']
 
 from sys import argv
 from os import listdir
@@ -38,13 +38,12 @@ class modHF_Picloram:
             r_p = True
 
         if atom:
-            return 'freq=noraman empiricaldispersion=pfd int=ultrafine scf=(novaracc,xqc,maxcycle=10000)'
-        
+            return 'freq=noraman M06HF/6-31+G(d) empiricaldispersion=pfd scf=(novaracc,xqc,maxcycle=10000) scrf=smd'
         if r_p:
-            return 'opt=calcfc freq=noraman empiricaldispersion=pfd int=ultrafine scf=(novaracc,xqc,maxcycle=10000)'
+            return 'opt freq=noraman M06HF/6-31+G(d) empiricaldispersion=pfd scf=(novaracc,xqc,maxcycle=10000) scrf=smd'
         if TS:
-            return 'opt=(calcfc,ts,maxcycle=100000,noeigentest) freq=noraman scrf=smd empiricaldispersion(pfd) int=ultrafine scf=(novaracc,xqc,maxcycle=10000) volume'
-        
+            return 'opt=(calcfc,ts,maxcycle=100000,noeigentest) freq=noraman M06HF/6-31+G(d) empiricaldispersion=pfd scf=(novaracc,xqc,maxcycle=10000) scrf=smd'
+
     def createInput(self, arq):
         
         mol = G16LOGfile(arq).getMolecule()
@@ -58,9 +57,6 @@ class modHF_Picloram:
 
             else:            
                 mol.toGJF(fileName=arq.replace('.log', '_{}_HF.gjf'.format(i)), method='B3LYP', basis='6-31+g(d)', addKeywords=self.handle_Keywords(arq), modHF=i)
-
-
-
 
 if __name__ == '__main__':
     modHF_Picloram()
