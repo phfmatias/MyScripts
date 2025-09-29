@@ -579,7 +579,7 @@ class makeslurm():
         self.slurm += "#SBATCH --partition={}\n".format(self.fila)
         self.slurm += "#SBATCH --time={}\n".format(self.time)
         self.slurm += "#SBATCH --nodes={}\n".format(self.nodes)
-        if self.fila == 'gpu' and self.calculo == 'gromacs':
+        if 'gpu' in self.fila and self.calculo == 'gromacs':
             self.slurm += '#SBATCH --ntasks=1\n'
             self.slurm += "#SBATCH --cpus-per-task={}\n".format(self.task)
         else:
@@ -655,7 +655,7 @@ class makeslurm():
 
             if 'gpu' in self.fila:
                 self.slurm += '\n\nexport OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
-                self.slurm += '\n\ngmx_mpirun mdrun -deffnm {} -ntomp {} -nb gpu -pme gpu -bonded gpu\n'.format(self.gmx_input, self.task)
+                self.slurm += '\n\ngmx_mpi mdrun -deffnm {} -ntomp {} -nb gpu -pme gpu -bonded gpu\n'.format(self.gmx_input, self.task)
             else:
                 self.slurm += '\nmpirun -np {} gmx_mpi mdrun -deffnm {}\n'.format(self.task, self.gmx_input)
 
