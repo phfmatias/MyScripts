@@ -36,8 +36,8 @@ class QTAIM_Analysis:
                 if 'Density of all electrons:' in i:
                     rho = float(i.split()[-1])
                     #
-                    #be_charged = ((-223.08*rho)+0.7423)*4.184  #neutral
-                    be_charged = ((-333.24*rho)-1.0661)*4.184   #charged H-Bond
+                    be_charged = ((-223.08*rho)+0.7423)*4.184  #neutral
+                    # be_charged = ((-333.24*rho)-1.0661)*4.184   #charged H-Bond
 
                     # −11.0 to −15.0 kcal/mo strenght = medium http://sobereva.com/attach/513/Tian_Lu_JCC_2019.pdf
                     # < −15.0 kcal/mol strenght = strong

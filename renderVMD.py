@@ -24,14 +24,17 @@ import os
 
 if len(argv) < 3:
     print("Usage: python3 renderVMD.py wait=False <input_file>")
+    print("Usage: python3 renderVMD.py wait=False qtaim")
     print("                       OR                          ")
     print("wait=False: Do not wait for the VMD window to close")
+    exit()
 
 if '.cub' in argv[2] and len(argv) < 4:
     print("Usage: python3 renderVMD.py wait=False <cube_file> <isovalue> fukui/orb")
     print("wait=True: Wait for the VMD window to close, so you can rotate the molecule")
     exit()
 
+    
 class Render():
     def __init__(self, input_file):
         self.input_file = input_file
@@ -68,8 +71,8 @@ class Render():
             exit()
 
     def check_file(self):
-        if self.input_file.split('.')[-1] not in ['gjf', 'xyz', 'log', 'cub']:
-            print("Invalid file format. Please provide a valid file format: gjf, xyz or log")
+        if self.input_file.split('.')[-1] not in ['gjf', 'xyz', 'log', 'cub', 'qtaim']:
+            print("Invalid file format. Please provide a valid file format: gjf, xyz, log or qtaim.")
             exit()
 
         if self.input_file.split('.')[-1] == 'xyz':
@@ -87,6 +90,14 @@ class Render():
         if self.input_file.split('.')[-1] == 'cub':
             self.doCUB()
             self.ipt = 'cub'
+
+        if self.input_file.split('.')[-1] == 'qtaim':
+            self.input_file = 'mol.xyz'
+            self.doXYZ()
+            self.ipt = 'qtaim'
+            if 'mol.xyz' not in os.listdir() or 'CPs.pdb' not in os.listdir() or 'paths.pdb' not in os.listdir():
+                print("For QTAIM rendering, please ensure that 'mol.xyz', 'CPs.pdb', and 'paths.pdb' files are present in the current directory.")
+                exit()
 
         
     def doGJF(self):
@@ -182,7 +193,7 @@ class Render():
 
         if ipt in ['gjf', 'log', 'xyz']:
             arq = open('render.tcl', 'w')
-            arq.write('mol representation {CPK 1.0 0.3 50.0 30.0}\n')
+            arq.write('mol representation {CPK 1.0 0.5 300.0 300.0}\n')
             arq.write('mol addrep top\n')
             arq.write('mol modcolor 1 0 Element\n')
             c = 0
@@ -208,71 +219,102 @@ class Render():
             arq.write('axes location off\n')
             arq.write('display update\n')
             arq.write('color Display Background white\n')
-            if argv[-1] == 'qtaim':
-                arq.write('color Display Background white\n')
-                arq.write('axes location Off\n')
-                arq.write('display depthcue off\n')
-                arq.write('display rendermode GLSL\n')
-                arq.write('set CPsize 0.07\n')
-                arq.write('set pathsize 0.02\n')
-                arq.write('mol new CPs.pdb\n')
-                arq.write('mol modselect 0 1 name C\n')
-                arq.write('mol modstyle 0 1 VDW $CPsize 22.0\n')
-                arq.write('mol modcolor 0 1 ColorID 11\n')
-                arq.write('mol addrep 1\n')
-                arq.write('mol modselect 1 1 name N\n')
-                arq.write('mol modstyle 1 1 VDW $CPsize 22.0\n')
-                arq.write('mol modcolor 1 1 ColorID 3\n')
-                arq.write('mol addrep 1\n')
-                arq.write('mol modselect 2 1 name O\n')
-                arq.write('mol modstyle 2 1 VDW $CPsize 22.0\n')
-                arq.write('mol modcolor 2 1 ColorID 4\n')
-                arq.write('mol addrep 1\n')
-                arq.write('mol modselect 3 1 name F\n')
-                arq.write('mol modstyle 3 1 VDW $CPsize 22.0\n')
-                arq.write('mol modcolor 3 1 ColorID 7\n')
-                arq.write('mol new paths.pdb\n')
-                arq.write('mol modstyle 0 2 VDW $pathsize 22.0\n')
-                arq.write('mol modcolor 0 2 ColorID 32\n')
-                arq.write('color change rgb 17 1.000000 1.000000 0.000000\n')
-                arq.write('color Display Background white\n')
-                arq.write('proc labcp {cptype {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
-                arq.write('label delete Atoms all\n')
-                arq.write('if {$cptype=="no"} {return}\n')
-                arq.write('color Labels Atoms blue\n')
-                arq.write('label textthickness 2.000000\n')
-                arq.write('label textsize $labsize\n')
-                arq.write('set atmsel all\n')
-                arq.write('if {$cptype=="3n3"} {set atmsel "name C"}\n')
-                arq.write('if {$cptype=="3n1"} {set atmsel "name N"}\n')
-                arq.write('if {$cptype=="3p1"} {set atmsel "name O"}\n')
-                arq.write('if {$cptype=="3p3"} {set atmsel "name F"}\n')
-                arq.write('set sel [atomselect 0 $atmsel]\n')
-                arq.write('set k 0\n')
-                arq.write('foreach i [$sel list] {\n')
-                arq.write('label add Atoms 0/$i\n')
-                arq.write('label textformat Atoms $k { %1i }\n')
-                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
-                arq.write('incr k\n')
-                arq.write('}\n')
-                arq.write('$sel delete\n')
-                arq.write('}\n')
-                arq.write('\n')
-                arq.write('proc labcpidx {cpidx {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
-                arq.write('label delete Atoms all\n')
-                arq.write('color Labels Atoms blue\n')
-                arq.write('label textthickness 2.000000\n')
-                arq.write('label textsize $labsize\n')
-                arq.write('set sel [atomselect 0 "serial $cpidx"]\n')
-                arq.write('set k 0\n')
-                arq.write('foreach i [$sel list] {\n')
-                arq.write('label add Atoms 0/$i\n')
-                arq.write('label textformat Atoms $k { %1i }\n')
-                arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
-                arq.write('incr k\n')
-                arq.write('}\n')
-                arq.write('$sel delete\n')
-                arq.write('}\n')
+            
+            if not self.wait:
+                arq.write('render Tachyon vmdscene.dat\n')
+                arq.write('exit')
+
+        if ipt == 'qtaim':
+            arq = open('render.tcl', 'w')
+            arq.write('color Display Background white\n')
+            arq.write('axes location Off\n')
+            arq.write('display depthcue off\n')
+            arq.write('display rendermode GLSL\n')
+            arq.write('set CPsize 0.07\n')
+            arq.write('set pathsize 0.02\n')
+            arq.write('mol new CPs.pdb\n')
+            arq.write('mol modselect 0 0 name C\n')
+            arq.write('mol modstyle 0 0 VDW $CPsize 22.0\n')
+            arq.write('mol modcolor 0 0 ColorID 11\n')
+            arq.write('mol addrep 0\n')
+            arq.write('mol modselect 1 0 name N\n')
+            arq.write('mol modstyle 1 0 VDW $CPsize 22.0\n')
+            arq.write('mol modcolor 1 0 ColorID 3\n')
+            arq.write('mol addrep 0\n')
+            arq.write('mol modselect 2 0 name O\n')
+            arq.write('mol modstyle 2 0 VDW $CPsize 22.0\n')
+            arq.write('mol modcolor 2 0 ColorID 4\n')
+            arq.write('mol addrep 0\n')
+            arq.write('mol modselect 3 0 name F\n')
+            arq.write('mol modstyle 3 0 VDW $CPsize 22.0\n')
+            arq.write('mol modcolor 3 0 ColorID 7\n')
+            arq.write('mol new paths.pdb\n')
+            arq.write('mol modstyle 0 1 VDW $pathsize 22.0\n')
+            arq.write('mol modcolor 0 1 ColorID 32\n')
+            arq.write('mol new mol.xyz\n')
+            arq.write('mol modstyle 0 2 CPK 1.0 0.5 300.0 300.0\n')
+            arq.write('mol modcolor 0 2 Element\n')
+            c = 0
+            for key, value in self.elements.items():
+                if c == 8:
+                    c+=1
+                arq.write('color Element {} {}\n'.format(key, self.colorsVMD[c]))
+                arq.write('color change rgb {} {:.6f} {:.6f} {:.6f}\n'.format(c, value[0], value[1], value[2]))
+                c+=1
+            arq.write('material change mirror Opaque 0.15\n')
+            arq.write('material change outline Opaque 4.000000\n')
+            arq.write('material change outlinewidth Opaque 0.5\n')
+            arq.write('material change ambient Glossy 0.1\n')
+            arq.write('material change diffuse Glossy 0.600000\n')
+            arq.write('material change opacity Glossy 0.75\n')
+            arq.write('material change ambient Opaque 0.08\n')
+            arq.write('material change mirror Opaque 0.0\n')
+            arq.write('material change shininess Glossy 1.0\n')
+            arq.write('display distance -7.0\n')
+            arq.write('display height 10\n')
+            arq.write('light 3 on\n')
+            arq.write('display depthcue off\n')
+            arq.write('axes location off\n')
+            arq.write('display update\n')
+            arq.write('color Display Background white\n')
+            arq.write('mol off 2\n')
+            arq.write('proc labcp {cptype {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+            arq.write('label delete Atoms all\n')
+            arq.write('if {$cptype=="no"} {return}\n')
+            arq.write('color Labels Atoms blue\n')
+            arq.write('label textthickness 2.000000\n')
+            arq.write('label textsize $labsize\n')
+            arq.write('set atmsel all\n')
+            arq.write('if {$cptype=="3n3"} {set atmsel "name C"}\n')
+            arq.write('if {$cptype=="3n1"} {set atmsel "name N"}\n')
+            arq.write('if {$cptype=="3p1"} {set atmsel "name O"}\n')
+            arq.write('if {$cptype=="3p3"} {set atmsel "name F"}\n')
+            arq.write('set sel [atomselect 0 $atmsel]\n')
+            arq.write('set k 0\n')
+            arq.write('foreach i [$sel list] {\n')
+            arq.write('label add Atoms 0/$i\n')
+            arq.write('label textformat Atoms $k { %1i }\n')
+            arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+            arq.write('incr k\n')
+            arq.write('}\n')
+            arq.write('$sel delete\n')
+            arq.write('}\n')
+            arq.write('\n')
+            arq.write('proc labcpidx {cpidx {labsize 1.8} {offsetx -0.1} {offsety 0.0}} {\n')
+            arq.write('label delete Atoms all\n')
+            arq.write('color Labels Atoms blue\n')
+            arq.write('label textthickness 2.000000\n')
+            arq.write('label textsize $labsize\n')
+            arq.write('set sel [atomselect 0 "serial $cpidx"]\n')
+            arq.write('set k 0\n')
+            arq.write('foreach i [$sel list] {\n')
+            arq.write('label add Atoms 0/$i\n')
+            arq.write('label textformat Atoms $k { %1i }\n')
+            arq.write('label textoffset Atoms $k "$offsetx $offsety"\n')
+            arq.write('incr k\n')
+            arq.write('}\n')
+            arq.write('$sel delete\n')
+            arq.write('}\n')
             if not self.wait:
                 arq.write('render Tachyon vmdscene.dat\n')
                 arq.write('exit')
@@ -382,8 +424,7 @@ class Render():
                 arq.write('exit')
     
     def doRender(self):
-        self.doTCL(self.ipt)
-        
+        self.doTCL(self.ipt)        
         if self.ipt in ['gjf', 'log', 'xyz']:
             if self.wait:
                 print('Please, when you are done, just paste in the VMD terminal. The code was already copied to the clipboard.')
@@ -392,7 +433,6 @@ class Render():
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
-
             else:
                 print('Rendering...')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
@@ -400,9 +440,20 @@ class Render():
                 self.toRemove = 'render.tcl vmdscene.dat'
                 #os.system('rm {}'.format(self.toRemove))
         
-            if 'temp.xyz' in os.listdir():
-                pass
-                #os.system('rm temp.xyz')
+        if self.ipt == 'qtaim':
+            if self.wait:
+                print('Please, when you are done, just paste in the VMD terminal. The code was already copied to the clipboard.')
+                print('exit')
+                input('Press Enter to continue to open VMD')
+                x = copy('render Tachyon vmdscene.dat')
+                os.system('vmd -e render.tcl')
+                os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
+            else:
+                print('Rendering...')
+                os.system('vmd -e render.tcl')
+                os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
+                #self.toRemove = 'render.tcl vmdscene.dat'
+                #os.system('rm {}'.format(self.toRemove))
 
         else:
             if self.wait:
