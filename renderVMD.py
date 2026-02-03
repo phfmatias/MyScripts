@@ -435,12 +435,12 @@ class Render():
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
             else:
                 print('Rendering...')
-                os.system('vmd {} -e render.tcl'.format(self.input_file))
+                # os.system('vmd {} -e render.tcl'.format(self.input_file))
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
                 self.toRemove = 'render.tcl vmdscene.dat'
                 #os.system('rm {}'.format(self.toRemove))
         
-        if self.ipt == 'qtaim':
+        elif self.ipt == 'qtaim':
             if self.wait:
                 print('Please, when you are done, just paste in the VMD terminal. The code was already copied to the clipboard.')
                 print('exit')

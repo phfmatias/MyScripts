@@ -42,7 +42,6 @@ def getCPS(atoms_to_get, file):
                 if cp == 18:
                     print(arq[i])
                     print(atom1, atom2)
-
                 print('Found CP: ', cp, ' of Atoms ', atom1, ' and ', atom2)
 
 getCPS(atoms_to_get, 'CPprop.txt')
