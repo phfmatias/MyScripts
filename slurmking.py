@@ -698,17 +698,6 @@ class makeslurm():
             self.slurm += 'export LD_LIBRARY_PATH=/home/phfmatias/.conda/envs/leedmol310/lib:$LD_LIBRARY_PATH\n'
             self.slurm += '\nexport scratchlocation=/scratch/global\n\n'
             
-            self.slurm += 'if [ ! -d $scratchlocation/$USER ]\n'
-            self.slurm += 'then\n'
-            self.slurm += 'mkdir -p $scratchlocation/$USER\n'
-            self.slurm += 'fi\n\n'
-            
-            self.slurm +='tdir=$(mktemp -d $scratchlocation/$USER/orcajob__$SLURM_JOB_ID-XXXX)\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.inp $tdir/\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.gbw $tdir/\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.xyz $tdir/\n'
-            self.slurm +='cd $tdir\n\n'
-
             if self.infoInput == 'y':
                 for i in arq:
                     self.slurm += '{} {} > {}\n\n'.format(pathOrca,i, i.replace('{}'.format(self.extension),'.log'))
@@ -716,27 +705,6 @@ class makeslurm():
             else:
                 self.slurm += '{} {} > {}\n\n'.format(pathOrca,arq, arq.replace('{}'.format(self.extension),'.log'))       
                 
-            self.slurm += 'cp $tdir/*.gbw $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.engrad $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.xyz $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.loc $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.qro $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.uno $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.unso $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.uco $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.hess $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.cis $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.dat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.mp2nat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.nat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfp_fod $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfp $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfr $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.nbo $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.log $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/FILE.47 $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*_property.txt $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*spin* $SLURM_SUBMIT_DIR\n'
             self.slurm += '\n\n'
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
 
@@ -765,12 +733,6 @@ class makeslurm():
             self.slurm += 'mkdir -p $scratchlocation/$USER\n'
             self.slurm += 'fi\n\n'
             
-            self.slurm +='tdir=$(mktemp -d $scratchlocation/$USER/orcajob__$SLURM_JOB_ID-XXXX)\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.inp $tdir/\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.gbw $tdir/\n'
-            self.slurm +='cp  $SLURM_SUBMIT_DIR/*.xyz $tdir/\n'
-            self.slurm +='cd $tdir\n\n'
-
             if self.infoInput == 'y':
                 for i in arq:
                     self.slurm += '{} {} > {}\n\n'.format(pathOrca,i, i.replace('{}'.format(self.extension),'.log'))
@@ -778,27 +740,6 @@ class makeslurm():
             else:
                 self.slurm += '{} {} > {}\n\n'.format(pathOrca,arq, arq.replace('{}'.format(self.extension),'.log'))                
 
-            self.slurm += 'cp $tdir/*.gbw $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.engrad $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.xyz $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.loc $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.qro $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.uno $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.unso $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.uco $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.hess $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.cis $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.dat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.mp2nat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.nat $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfp_fod $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfp $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.scfr $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.nbo $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*.log $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/FILE.47 $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*_property.txt $SLURM_SUBMIT_DIR\n'
-            self.slurm += 'cp $tdir/*spin* $SLURM_SUBMIT_DIR\n'
             self.slurm += '\n\n'
             self.slurm += '\necho -e "\\n## Job finalizado em $(date +"%d-%m-%Y as %T")"'
             

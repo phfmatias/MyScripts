@@ -34,7 +34,6 @@ if '.cub' in argv[2] and len(argv) < 4:
     print("wait=True: Wait for the VMD window to close, so you can rotate the molecule")
     exit()
 
-    
 class Render():
     def __init__(self, input_file):
         self.input_file = input_file
