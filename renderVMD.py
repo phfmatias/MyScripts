@@ -41,8 +41,11 @@ class Render():
         self.toRemove = ''
         self.colorsVMD = [x for x in range(32)]
 
-        self.name = self.input_file.split('.')[0]
-            
+        if '../' in self.input_file:
+            self.name = self.input_file.split('/')[-1].split('.')[0]
+        else:
+            self.name = self.input_file.split('.')[0]
+               
         self.checkWait()
         self.checkTachyon()
         self.check_file()
@@ -90,7 +93,7 @@ class Render():
             self.doCUB()
             self.ipt = 'cub'
 
-        if self.input_file.split('.')[-1] == 'qtaim':
+        if argv[-1] == 'qtaim':
             self.input_file = 'mol.xyz'
             self.doXYZ()
             self.ipt = 'qtaim'
@@ -431,6 +434,8 @@ class Render():
                 input('Press Enter to continue to open VMD')
                 x = copy('render Tachyon vmdscene.dat')
                 os.system('vmd {} -e render.tcl'.format(self.input_file))
+                if self.name == '':
+                    self.name = 'render'
                 os.system('tachyon vmdscene.dat -format PNG -o {}.png -res 2000 1500 -aasamples 24'.format(self.name))
             else:
                 print('Rendering...')
